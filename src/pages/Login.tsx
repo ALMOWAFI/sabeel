@@ -34,11 +34,11 @@ const Login = () => {
       sessionStorage.setItem('member-authenticated', 'premium');
       setIsSuccess(true);
       
-      // Add a slight delay before redirecting to show the success animation
+      // Shorter delay and direct navigation
       setTimeout(() => {
         setIsLoading(false);
         navigate('/members');
-      }, 1200);
+      }, 1000);
     } 
     // For regular members (any other password)
     else if (password.length >= 4) {
@@ -51,11 +51,11 @@ const Login = () => {
       sessionStorage.setItem('member-authenticated', 'regular');
       setIsSuccess(true);
       
-      // Add a slight delay before redirecting to show the success animation
+      // Shorter delay and direct navigation
       setTimeout(() => {
         setIsLoading(false);
         navigate('/members');
-      }, 1200);
+      }, 1000);
     } 
     // For invalid passwords
     else {
@@ -160,7 +160,7 @@ const Login = () => {
               </Button>
             </form>
             
-            {/* Success Animation */}
+            {/* Success Animation with immediate redirect confirmation */}
             {isSuccess && (
               <motion.div 
                 className="mt-6 flex justify-center"
