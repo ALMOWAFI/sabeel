@@ -1,9 +1,8 @@
-
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Users, GitHub, BookOpen, Calendar, MessageCircle } from 'lucide-react';
+import { MessageSquare, Users, Github, BookOpen, Calendar, MessageCircle } from 'lucide-react';
 
 const Community = () => {
   return (
@@ -51,7 +50,7 @@ const Community = () => {
               
               <div className="bg-sabeel-light dark:bg-gray-800 rounded-lg shadow-md p-6">
                 <div className="mb-4">
-                  <GitHub className="w-10 h-10 text-sabeel-primary" />
+                  <Github className="w-10 h-10 text-sabeel-primary" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3 text-sabeel-secondary dark:text-white">مساهمة تقنية</h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
