@@ -91,8 +91,8 @@ const Navbar = () => {
             </Link>
           ))}
           
-          <Button variant="outline" className="ml-4 border-sabeel-primary text-sabeel-primary hover:bg-sabeel-primary hover:text-white">
-            الإنضمام
+          <Button asChild variant="outline" className="ml-4 border-sabeel-primary text-sabeel-primary hover:bg-sabeel-primary hover:text-white">
+            <Link to="/community">الإنضمام</Link>
           </Button>
           
           <Button variant="ghost" size="icon" className="ml-2" onClick={toggleTheme}>
@@ -114,8 +114,8 @@ const Navbar = () => {
                   {link.name}
                 </Link>
               ))}
-              <Button className="w-full mt-4 bg-sabeel-primary hover:bg-sabeel-secondary text-white">
-                الإنضمام
+              <Button asChild className="w-full mt-4 bg-sabeel-primary hover:bg-sabeel-secondary text-white">
+                <Link to="/community" onClick={closeMenu}>الإنضمام</Link>
               </Button>
             </nav>
           </div>
