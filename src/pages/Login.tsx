@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { Label } from "@/components/ui/label";
 import { Lock, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
@@ -60,29 +61,29 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gradient-to-b from-sabeel-primary/10 to-sabeel-secondary/10">
-      <div className="w-full max-w-md px-6 py-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden border-2 border-sabeel-primary/20">
-          <div className="p-8">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+      <div className="w-full max-w-md p-8">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="p-6">
             {/* Logo and Header */}
-            <div className="flex flex-col items-center mb-8">
+            <div className="flex flex-col items-center mb-6">
               <img 
                 src="/lovable-uploads/a5fcac1b-54eb-4860-bfd4-5ec4efa83444.png" 
                 alt="Islamic Emblem" 
-                className="w-24 h-24 object-contain mb-4"
+                className="w-20 h-20 object-contain mb-4"
               />
-              <h1 className="font-arabic text-3xl font-bold text-sabeel-primary mb-2 text-center">منطقة الأعضاء</h1>
-              <div className="text-sm text-gray-600 dark:text-gray-300 text-center max-w-xs">
-                هذه المنطقة مخصصة للأعضاء المصرح لهم فقط
+              <h1 className="text-2xl font-bold text-gray-800 mb-1 text-center">منطقة الأعضاء</h1>
+              <div className="text-sm text-gray-500 text-center">
+                أدخل كلمة المرور للوصول
               </div>
             </div>
             
             {/* Login Form */}
-            <form onSubmit={handleLogin} className="space-y-6">
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 text-right font-arabic">
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-right block">
                   كلمة المرور
-                </label>
+                </Label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Lock className="h-5 w-5 text-gray-400" />
@@ -91,11 +92,10 @@ const Login = () => {
                     id="password"
                     name="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="أدخل كلمة المرور الخاصة بك"
+                    placeholder="أدخل كلمة المرور"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-4"
-                    required
+                    className="pl-10 pr-10 text-right"
                     dir="rtl"
                   />
                   <button
@@ -110,15 +110,15 @@ const Login = () => {
                     )}
                   </button>
                 </div>
-                <p className="mt-2 text-xs text-gray-500 text-right">
-                  <span className="font-bold">ملاحظة:</span> أعضاء بريميوم يجب أن تنتهي كلمة المرور بـ <span className="font-mono text-sabeel-accent">101</span>
+                <p className="text-xs text-gray-500 text-right">
+                  للأعضاء المميزين: يجب أن تنتهي كلمة المرور بـ 101
                 </p>
               </div>
               
               <Button 
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-sabeel-primary hover:bg-sabeel-secondary text-white"
+                className="w-full"
               >
                 {isLoading ? 'جاري التحقق...' : 'دخول'}
               </Button>
