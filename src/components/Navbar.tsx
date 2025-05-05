@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Link } from 'react-router-dom';
-import { Menu, X, Moon, Sun } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, Moon, Sun, Lock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Navbar = () => {
@@ -10,6 +10,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const location = useLocation();
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const closeMenu = () => setIsOpen(false);
@@ -45,7 +46,6 @@ const Navbar = () => {
     { name: 'للتقنيين', path: '/for-technologists' },
     { name: 'المجتمع', path: '/community' },
     { name: 'الموارد', path: '/resources' },
-    { name: 'منطقة الأعضاء', path: '/members' },
   ];
 
   return (
@@ -90,6 +90,13 @@ const Navbar = () => {
           <Button asChild variant="outline" className="ml-4 border-sabeel-primary text-sabeel-primary hover:bg-sabeel-primary hover:text-white">
             <Link to="/community">الإنضمام</Link>
           </Button>
+
+          {/* Members Login Button */}
+          <Button asChild variant="ghost" size="icon" className="ml-2 text-sabeel-secondary hover:bg-sabeel-primary/10">
+            <Link to="/login" aria-label="تسجيل الدخول">
+              <Lock size={18} />
+            </Link>
+          </Button>
           
           <Button variant="ghost" size="icon" className="ml-2" onClick={toggleTheme}>
             {darkMode ? <Sun size={20} /> : <Moon size={20} />}
@@ -110,9 +117,16 @@ const Navbar = () => {
                   {link.name}
                 </Link>
               ))}
-              <Button asChild className="w-full mt-4 bg-sabeel-primary hover:bg-sabeel-secondary text-white">
-                <Link to="/community" onClick={closeMenu}>الإنضمام</Link>
-              </Button>
+              <div className="flex flex-col gap-2 mt-2">
+                <Button asChild className="w-full mt-2 bg-sabeel-primary hover:bg-sabeel-secondary text-white">
+                  <Link to="/community" onClick={closeMenu}>الإنضمام</Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full border-sabeel-primary text-sabeel-primary">
+                  <Link to="/login" onClick={closeMenu} className="flex items-center justify-center gap-2">
+                    <Lock size={16} /> منطقة الأعضاء
+                  </Link>
+                </Button>
+              </div>
             </nav>
           </div>
         )}

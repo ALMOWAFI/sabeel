@@ -11,6 +11,7 @@ import ForTechnologists from "./pages/ForTechnologists";
 import Community from "./pages/Community";
 import Resources from "./pages/Resources";
 import Members from "./pages/Members";
+import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/for-technologists" element={<ForTechnologists />} />
           <Route path="/community" element={<Community />} />
           <Route path="/resources" element={<Resources />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/members" element={<Members />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

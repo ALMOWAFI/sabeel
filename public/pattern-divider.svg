@@ -1,0 +1,5 @@
+
+<svg width="240" height="24" viewBox="0 0 240 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 12H60M180 12H240M80 12L100 2M100 2L120 22M120 22L140 2M140 2L160 22M160 22L180 12M80 12L100 22M100 22L120 2M120 2L140 22M140 22L160 2M160 2L180 12M80 12H60" stroke="#D4AF37" stroke-width="1"/>
+  <circle cx="120" cy="12" r="6" stroke="#D4AF37" stroke-width="1" fill="none"/>
+</svg>

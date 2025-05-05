@@ -1,5 +1,5 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,16 @@ const Members = () => {
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Check if user was authenticated through the login page
+  useEffect(() => {
+    // Simple session check - in a real app, use proper authentication state management
+    const authSession = sessionStorage.getItem('member-authenticated');
+    if (authSession === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
 
   const handlePasswordCheck = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +41,7 @@ const Members = () => {
     // Check if password ends with 101
     if (password.endsWith('101')) {
       setIsAuthenticated(true);
+      sessionStorage.setItem('member-authenticated', 'true');
       toast({
         title: "تم الدخول بنجاح",
         description: "مرحباً بك في منطقة الأعضاء الخاصة",
@@ -45,6 +56,14 @@ const Members = () => {
       setPassword('');
     }
   };
+
+  // Redirect unauthenticated users to login page
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // We'll let the inline login form handle authentication for now
+      // navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
 
   // Dummy data for the member dashboard
   const currentTasks = [
