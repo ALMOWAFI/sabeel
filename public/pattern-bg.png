@@ -1,2 +1,10 @@
 
-<!-- This is a binary file, but we'll create a placeholder for it and then provide instructions on how to generate it -->
+<!-- This is a binary file. I'll create a placeholder with instructions on how to create it -->
+
+To create this file:
+1. Create a 200x200px transparent PNG with a subtle Islamic geometric pattern
+2. Use gold (#D4AF37) color with 10-20% opacity
+3. Create repeating geometric shapes typical of Islamic art (stars, hexagons or interlaced patterns)
+4. Save as PNG with transparency
+
+For the purposes of this implementation, we'll use the file that will be uploaded to the correct location.
