@@ -12,6 +12,13 @@ const About = () => {
         <section className="py-20 bg-sabeel-primary text-white">
           <div className="container mx-auto px-4 md:px-6">
             <div className="max-w-3xl mx-auto text-center">
+              <div className="flex justify-center mb-6">
+                <img 
+                  src="/lovable-uploads/a5fcac1b-54eb-4860-bfd4-5ec4efa83444.png" 
+                  alt="سَبِيل - Sabeel Logo" 
+                  className="h-24 md:h-32"
+                />
+              </div>
               <h1 className="text-3xl md:text-5xl font-bold mb-6">عن سبيل</h1>
               <p className="text-xl mb-6">
                 منصة تجمع بين العلماء والتقنيين لتسخير الذكاء الاصطناعي في خدمة الإسلام والمسلمين

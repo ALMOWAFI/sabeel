@@ -12,8 +12,15 @@ const Footer = () => {
           {/* Logo & Description */}
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center space-x-3 rtl:space-x-reverse mb-4">
-              <span className="font-arabic text-2xl font-bold text-white">سَبِيل</span>
-              <span className="self-center text-xl font-semibold whitespace-nowrap">Sabeel</span>
+              <img 
+                src="/lovable-uploads/a5fcac1b-54eb-4860-bfd4-5ec4efa83444.png" 
+                alt="سَبِيل - Sabeel Logo" 
+                className="h-12"
+              />
+              <div>
+                <span className="font-arabic text-xl font-bold text-white">سَبِيل</span>
+                <span className="block text-sm font-medium whitespace-nowrap">Sabeel</span>
+              </div>
             </Link>
             <p className="text-gray-300 mb-4">
               نحو تقنية تخدم الإسلام وأهله
