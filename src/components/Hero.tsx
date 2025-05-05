@@ -8,15 +8,6 @@ const Hero = () => {
   return (
     <section className="relative hero-pattern min-h-screen flex items-center overflow-hidden pt-16">
       <div className="container mx-auto px-4 md:px-6 py-12 flex flex-col items-center text-center">
-        {/* Logo */}
-        <div className="mb-6 animate-fade-in-up">
-          <img 
-            src="/lovable-uploads/a5fcac1b-54eb-4860-bfd4-5ec4efa83444.png" 
-            alt="سَبِيل - Sabeel Logo" 
-            className="h-32 md:h-48 lg:h-64 mx-auto"
-          />
-        </div>
-        
         {/* Subtitle */}
         <p className="text-xl md:text-2xl font-medium mb-6 max-w-2xl animate-fade-in-up delay-100 text-sabeel-secondary dark:text-sabeel-light">
           الطريق نحو تقنية تخدم الإسلام وأهله

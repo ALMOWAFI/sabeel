@@ -45,6 +45,7 @@ const Navbar = () => {
     { name: 'للتقنيين', path: '/for-technologists' },
     { name: 'المجتمع', path: '/community' },
     { name: 'الموارد', path: '/resources' },
+    { name: 'منطقة الأعضاء', path: '/members' },
   ];
 
   return (
@@ -52,11 +53,6 @@ const Navbar = () => {
       <div className="container mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center" onClick={closeMenu}>
-          <img 
-            src="/lovable-uploads/a5fcac1b-54eb-4860-bfd4-5ec4efa83444.png" 
-            alt="سَبِيل - Sabeel Logo" 
-            className="h-12 md:h-16 mr-2"
-          />
           <div className="flex flex-col">
             <span className="font-arabic text-lg md:text-xl font-bold text-sabeel-primary">سَبِيل</span>
             <span className="text-sm md:text-md font-semibold whitespace-nowrap">Sabeel</span>
