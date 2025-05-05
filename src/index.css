@@ -125,4 +125,79 @@
   .nav-scrolled {
     @apply bg-white/90 backdrop-blur-md shadow-sm;
   }
+  
+  .bg-sabeel-gradient {
+    @apply bg-gradient-to-r from-sabeel-primary to-sabeel-accent;
+  }
+  
+  .text-sabeel-gradient {
+    @apply bg-gradient-to-r from-sabeel-primary to-sabeel-accent bg-clip-text text-transparent;
+  }
+  
+  .btn-sabeel-gradient {
+    @apply bg-gradient-to-r from-sabeel-primary to-sabeel-secondary hover:from-sabeel-secondary hover:to-sabeel-primary text-white transition-all;
+  }
+  
+  .card-sabeel {
+    @apply border-2 border-sabeel-primary/20 shadow-md bg-gradient-to-br from-white to-sabeel-primary/5;
+  }
+  
+  .card-header-sabeel {
+    @apply bg-gradient-to-r from-sabeel-primary/20 to-sabeel-accent/10 pb-2;
+  }
+}
+
+@layer utilities {
+  .shimmer {
+    @apply relative overflow-hidden before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent;
+  }
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
 }

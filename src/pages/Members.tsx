@@ -66,13 +66,20 @@ const Members = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-sabeel-primary/5 to-sabeel-accent/5">
       <Navbar />
       <main className="flex-grow pt-20 px-4 pb-12">
         {!isAuthenticated ? (
-          <div className="max-w-md mx-auto w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+          <div className="max-w-md mx-auto w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 border-2 border-sabeel-primary/20">
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold text-sabeel-primary mb-2">منطقة الأعضاء</h1>
+              <div className="flex justify-center mb-4">
+                <img 
+                  src="/lovable-uploads/a5fcac1b-54eb-4860-bfd4-5ec4efa83444.png" 
+                  alt="Prime Logo" 
+                  className="h-24"
+                />
+              </div>
+              <h1 className="text-2xl font-bold text-sabeel-primary mb-2 font-arabic">منطقة الأعضاء</h1>
               <p className="text-gray-600 dark:text-gray-300">
                 هذه المنطقة مخصصة للأعضاء العاملين فقط
               </p>
@@ -90,7 +97,7 @@ const Members = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full"
+                  className="w-full border-sabeel-primary/30 focus:border-sabeel-primary focus:ring-1 focus:ring-sabeel-primary"
                 />
               </div>
               
@@ -102,7 +109,7 @@ const Members = () => {
         ) : (
           <div className="max-w-7xl mx-auto">
             {/* Prime Logo & Header Area with Teal Gradient Background */}
-            <div className="rounded-xl overflow-hidden mb-8 bg-gradient-to-r from-sabeel-primary to-sabeel-secondary p-1">
+            <div className="rounded-xl overflow-hidden mb-8 bg-gradient-to-r from-sabeel-primary to-sabeel-accent p-1 shadow-lg">
               <div className="bg-white dark:bg-gray-800 rounded-lg p-6 flex flex-col md:flex-row items-center justify-between">
                 <div className="flex items-center mb-4 md:mb-0">
                   <img 
@@ -130,32 +137,32 @@ const Members = () => {
 
             {/* Main Content Area - Tabs */}
             <Tabs defaultValue="current-work" className="w-full" dir="rtl">
-              <TabsList className="w-full flex justify-around mb-6 bg-white dark:bg-gray-800 p-1 rounded-lg border border-gray-200 dark:border-gray-700">
-                <TabsTrigger value="current-work" className="flex-1 py-3 data-[state=active]:bg-sabeel-primary data-[state=active]:text-white">
+              <TabsList className="w-full flex justify-around mb-6 bg-white dark:bg-gray-800 p-1 rounded-lg border-2 border-sabeel-accent/20 shadow-md">
+                <TabsTrigger value="current-work" className="flex-1 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-sabeel-primary data-[state=active]:to-sabeel-secondary data-[state=active]:text-white">
                   <div className="flex flex-col items-center gap-2">
                     <Inbox size={20} />
                     <span>العمل الحالي</span>
                   </div>
                 </TabsTrigger>
-                <TabsTrigger value="team" className="flex-1 py-3 data-[state=active]:bg-sabeel-primary data-[state=active]:text-white">
+                <TabsTrigger value="team" className="flex-1 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-sabeel-primary data-[state=active]:to-sabeel-secondary data-[state=active]:text-white">
                   <div className="flex flex-col items-center gap-2">
                     <Users size={20} />
                     <span>المجموعة</span>
                   </div>
                 </TabsTrigger>
-                <TabsTrigger value="tasks" className="flex-1 py-3 data-[state=active]:bg-sabeel-primary data-[state=active]:text-white">
+                <TabsTrigger value="tasks" className="flex-1 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-sabeel-primary data-[state=active]:to-sabeel-secondary data-[state=active]:text-white">
                   <div className="flex flex-col items-center gap-2">
                     <Calendar size={20} />
                     <span>المهام</span>
                   </div>
                 </TabsTrigger>
-                <TabsTrigger value="tips" className="flex-1 py-3 data-[state=active]:bg-sabeel-primary data-[state=active]:text-white">
+                <TabsTrigger value="tips" className="flex-1 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-sabeel-primary data-[state=active]:to-sabeel-secondary data-[state=active]:text-white">
                   <div className="flex flex-col items-center gap-2">
                     <BookText size={20} />
                     <span>النصائح</span>
                   </div>
                 </TabsTrigger>
-                <TabsTrigger value="ideas" className="flex-1 py-3 data-[state=active]:bg-sabeel-primary data-[state=active]:text-white">
+                <TabsTrigger value="ideas" className="flex-1 py-3 data-[state=active]:bg-gradient-to-r data-[state=active]:from-sabeel-primary data-[state=active]:to-sabeel-secondary data-[state=active]:text-white">
                   <div className="flex flex-col items-center gap-2">
                     <Trophy size={20} />
                     <span>الإنتاج والأفكار</span>
@@ -166,8 +173,8 @@ const Members = () => {
               {/* Current Work Tab */}
               <TabsContent value="current-work" className="px-4">
                 <div className="grid gap-6 md:grid-cols-2">
-                  <Card className="border-2 border-sabeel-primary/20">
-                    <CardHeader className="bg-sabeel-primary/10 pb-2">
+                  <Card className="border-2 border-sabeel-primary/20 shadow-md bg-gradient-to-br from-white to-sabeel-primary/5">
+                    <CardHeader className="bg-gradient-to-r from-sabeel-primary/20 to-sabeel-accent/10 pb-2">
                       <CardTitle className="flex items-center gap-2 text-sabeel-primary font-arabic">
                         <Inbox size={20} /> 
                         المشاريع الحالية
@@ -176,7 +183,7 @@ const Members = () => {
                     <CardContent className="pt-4">
                       <div className="space-y-4">
                         {currentTasks.map(task => (
-                          <div key={task.id} className="border-b border-gray-200 dark:border-gray-700 pb-3 last:border-0 last:pb-0">
+                          <div key={task.id} className="border-b border-sabeel-primary/20 pb-3 last:border-0 last:pb-0">
                             <div className="flex justify-between">
                               <h3 className="font-semibold">{task.title}</h3>
                               <span className={`text-xs px-2 py-0.5 rounded-full ${
@@ -196,8 +203,8 @@ const Members = () => {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-2 border-sabeel-primary/20">
-                    <CardHeader className="bg-sabeel-primary/10 pb-2">
+                  <Card className="border-2 border-sabeel-primary/20 shadow-md bg-gradient-to-br from-white to-sabeel-primary/5">
+                    <CardHeader className="bg-gradient-to-r from-sabeel-primary/20 to-sabeel-accent/10 pb-2">
                       <CardTitle className="flex items-center gap-2 text-sabeel-primary font-arabic">
                         <ChartBar size={20} /> 
                         تقدم العمل
@@ -211,7 +218,7 @@ const Members = () => {
                             <span>75%</span>
                           </div>
                           <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                            <div className="bg-sabeel-primary h-full rounded-full" style={{ width: '75%' }}></div>
+                            <div className="bg-gradient-to-r from-sabeel-primary to-sabeel-accent h-full rounded-full" style={{ width: '75%' }}></div>
                           </div>
                         </div>
                         <div className="space-y-2">
@@ -220,7 +227,7 @@ const Members = () => {
                             <span>90%</span>
                           </div>
                           <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                            <div className="bg-sabeel-primary h-full rounded-full" style={{ width: '90%' }}></div>
+                            <div className="bg-gradient-to-r from-sabeel-primary to-sabeel-accent h-full rounded-full" style={{ width: '90%' }}></div>
                           </div>
                         </div>
                         <div className="space-y-2">
@@ -229,7 +236,7 @@ const Members = () => {
                             <span>45%</span>
                           </div>
                           <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                            <div className="bg-sabeel-primary h-full rounded-full" style={{ width: '45%' }}></div>
+                            <div className="bg-gradient-to-r from-sabeel-primary to-sabeel-accent h-full rounded-full" style={{ width: '45%' }}></div>
                           </div>
                         </div>
                       </div>
@@ -241,8 +248,8 @@ const Members = () => {
               {/* Team Tab */}
               <TabsContent value="team" className="px-4">
                 <div className="grid gap-6 md:grid-cols-2">
-                  <Card className="border-2 border-sabeel-primary/20">
-                    <CardHeader className="bg-sabeel-primary/10 pb-2">
+                  <Card className="border-2 border-sabeel-primary/20 shadow-md bg-gradient-to-br from-white to-sabeel-primary/5">
+                    <CardHeader className="bg-gradient-to-r from-sabeel-primary/20 to-sabeel-accent/10 pb-2">
                       <CardTitle className="flex items-center gap-2 text-sabeel-primary font-arabic">
                         <Users size={20} /> 
                         أعضاء الفريق
@@ -251,7 +258,7 @@ const Members = () => {
                     <CardContent className="pt-4">
                       <div className="space-y-4">
                         {teamMembers.map(member => (
-                          <div key={member.id} className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 pb-3 last:border-0 last:pb-0">
+                          <div key={member.id} className="flex items-center justify-between border-b border-sabeel-primary/20 pb-3 last:border-0 last:pb-0">
                             <div>
                               <div className="font-medium">{member.name}</div>
                               <div className="text-sm text-gray-500 dark:text-gray-400">{member.role}</div>
@@ -269,8 +276,8 @@ const Members = () => {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-2 border-sabeel-primary/20">
-                    <CardHeader className="bg-sabeel-primary/10 pb-2">
+                  <Card className="border-2 border-sabeel-primary/20 shadow-md bg-gradient-to-br from-white to-sabeel-primary/5">
+                    <CardHeader className="bg-gradient-to-r from-sabeel-primary/20 to-sabeel-accent/10 pb-2">
                       <CardTitle className="flex items-center gap-2 text-sabeel-primary font-arabic">
                         <MessageCircle size={20} /> 
                         رسالة للفريق
@@ -280,9 +287,9 @@ const Members = () => {
                       <div className="space-y-4">
                         <Textarea 
                           placeholder="اكتب رسالتك للفريق هنا..." 
-                          className="min-h-[120px]"
+                          className="min-h-[120px] border-sabeel-primary/30 focus:border-sabeel-primary focus:ring-1 focus:ring-sabeel-primary"
                         />
-                        <Button className="w-full bg-sabeel-primary hover:bg-sabeel-secondary">
+                        <Button className="w-full bg-gradient-to-r from-sabeel-primary to-sabeel-secondary hover:from-sabeel-secondary hover:to-sabeel-primary text-white">
                           إرسال الرسالة
                         </Button>
                       </div>
@@ -293,8 +300,8 @@ const Members = () => {
 
               {/* Tasks Tab */}
               <TabsContent value="tasks" className="px-4">
-                <Card className="border-2 border-sabeel-primary/20">
-                  <CardHeader className="bg-sabeel-primary/10 pb-2">
+                <Card className="border-2 border-sabeel-primary/20 shadow-md bg-gradient-to-br from-white to-sabeel-primary/5">
+                  <CardHeader className="bg-gradient-to-r from-sabeel-primary/20 to-sabeel-accent/10 pb-2">
                     <CardTitle className="flex items-center gap-2 text-sabeel-primary font-arabic">
                       <Calendar size={20} /> 
                       المهام والمواعيد
@@ -304,7 +311,7 @@ const Members = () => {
                     <div className="overflow-x-auto">
                       <table className="w-full border-collapse">
                         <thead>
-                          <tr className="border-b border-gray-200 dark:border-gray-700">
+                          <tr className="border-b-2 border-sabeel-accent/30">
                             <th className="py-2 px-4 text-right text-sabeel-primary">المهمة</th>
                             <th className="py-2 px-4 text-right text-sabeel-primary">المسؤول</th>
                             <th className="py-2 px-4 text-right text-sabeel-primary">تاريخ التسليم</th>
@@ -312,7 +319,7 @@ const Members = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          <tr className="border-b border-gray-200 dark:border-gray-700">
+                          <tr className="border-b border-sabeel-primary/10 hover:bg-sabeel-primary/5">
                             <td className="py-3 px-4">تطوير واجهة الصفحة الرئيسية</td>
                             <td className="py-3 px-4">أحمد محمد</td>
                             <td className="py-3 px-4">15 مايو 2025</td>
@@ -320,7 +327,7 @@ const Members = () => {
                               <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full dark:bg-yellow-900/30 dark:text-yellow-300">قيد التنفيذ</span>
                             </td>
                           </tr>
-                          <tr className="border-b border-gray-200 dark:border-gray-700">
+                          <tr className="border-b border-sabeel-primary/10 hover:bg-sabeel-primary/5">
                             <td className="py-3 px-4">تصميم قاعدة البيانات</td>
                             <td className="py-3 px-4">سارة أحمد</td>
                             <td className="py-3 px-4">20 مايو 2025</td>
@@ -328,7 +335,7 @@ const Members = () => {
                               <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full dark:bg-green-900/30 dark:text-green-300">مكتمل</span>
                             </td>
                           </tr>
-                          <tr className="border-b border-gray-200 dark:border-gray-700">
+                          <tr className="border-b border-sabeel-primary/10 hover:bg-sabeel-primary/5">
                             <td className="py-3 px-4">اختبار الأداء</td>
                             <td className="py-3 px-4">محمد علي</td>
                             <td className="py-3 px-4">10 مايو 2025</td>
@@ -336,7 +343,7 @@ const Members = () => {
                               <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full dark:bg-red-900/30 dark:text-red-300">متأخر</span>
                             </td>
                           </tr>
-                          <tr className="border-b border-gray-200 dark:border-gray-700">
+                          <tr className="border-b border-sabeel-primary/10 hover:bg-sabeel-primary/5">
                             <td className="py-3 px-4">تحديث المحتوى</td>
                             <td className="py-3 px-4">ليلى خالد</td>
                             <td className="py-3 px-4">25 مايو 2025</td>
@@ -354,8 +361,8 @@ const Members = () => {
               {/* Tips Tab */}
               <TabsContent value="tips" className="px-4">
                 <div className="grid gap-6 md:grid-cols-2">
-                  <Card className="border-2 border-sabeel-primary/20">
-                    <CardHeader className="bg-sabeel-primary/10 pb-2">
+                  <Card className="border-2 border-sabeel-primary/20 shadow-md bg-gradient-to-br from-white to-sabeel-primary/5">
+                    <CardHeader className="bg-gradient-to-r from-sabeel-primary/20 to-sabeel-accent/10 pb-2">
                       <CardTitle className="flex items-center gap-2 text-sabeel-primary font-arabic">
                         <BookText size={20} /> 
                         تذكيرات ونصائح
@@ -364,7 +371,7 @@ const Members = () => {
                     <CardContent className="pt-4">
                       <div className="space-y-4">
                         {reminders.map((reminder, index) => (
-                          <div key={index} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-md border-r-4 border-sabeel-accent">
+                          <div key={index} className="p-3 bg-sabeel-primary/5 rounded-md border-r-4 border-sabeel-accent shadow">
                             <p className="text-gray-700 dark:text-gray-300">{reminder}</p>
                           </div>
                         ))}
@@ -372,8 +379,8 @@ const Members = () => {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-2 border-sabeel-primary/20">
-                    <CardHeader className="bg-sabeel-primary/10 pb-2">
+                  <Card className="border-2 border-sabeel-primary/20 shadow-md bg-gradient-to-br from-white to-sabeel-primary/5">
+                    <CardHeader className="bg-gradient-to-r from-sabeel-primary/20 to-sabeel-accent/10 pb-2">
                       <CardTitle className="flex items-center gap-2 text-sabeel-primary font-arabic">
                         <FileText size={20} /> 
                         اقتباسات ملهمة
@@ -381,14 +388,14 @@ const Members = () => {
                     </CardHeader>
                     <CardContent className="pt-4">
                       <div className="space-y-4">
-                        <blockquote className="border-r-4 border-sabeel-primary p-4 bg-sabeel-primary/5 rounded-md">
+                        <blockquote className="border-r-4 border-sabeel-accent p-4 bg-gradient-to-r from-sabeel-primary/10 to-sabeel-accent/5 rounded-md shadow">
                           <p className="font-arabic text-lg">"لا نرضى أن يُقال لنا يوم القيامة: كان بين أيديكم طريق، ولم تمشوا فيه…"</p>
                         </blockquote>
-                        <blockquote className="border-r-4 border-sabeel-primary p-4 bg-sabeel-primary/5 rounded-md">
+                        <blockquote className="border-r-4 border-sabeel-accent p-4 bg-gradient-to-r from-sabeel-primary/10 to-sabeel-accent/5 rounded-md shadow">
                           <p className="font-arabic text-lg">"من لم يكن في زيادة فهو في نقصان"</p>
                           <footer className="text-left text-sm text-gray-500 dark:text-gray-400 mt-2">- الإمام الشافعي</footer>
                         </blockquote>
-                        <blockquote className="border-r-4 border-sabeel-primary p-4 bg-sabeel-primary/5 rounded-md">
+                        <blockquote className="border-r-4 border-sabeel-accent p-4 bg-gradient-to-r from-sabeel-primary/10 to-sabeel-accent/5 rounded-md shadow">
                           <p className="font-arabic text-lg">"العلم ما نفع، والجهل ما ضر"</p>
                           <footer className="text-left text-sm text-gray-500 dark:text-gray-400 mt-2">- الإمام الشافعي</footer>
                         </blockquote>
@@ -401,8 +408,8 @@ const Members = () => {
               {/* Ideas Tab */}
               <TabsContent value="ideas" className="px-4">
                 <div className="grid gap-6 md:grid-cols-2">
-                  <Card className="border-2 border-sabeel-primary/20">
-                    <CardHeader className="bg-sabeel-primary/10 pb-2">
+                  <Card className="border-2 border-sabeel-primary/20 shadow-md bg-gradient-to-br from-white to-sabeel-primary/5">
+                    <CardHeader className="bg-gradient-to-r from-sabeel-primary/20 to-sabeel-accent/10 pb-2">
                       <CardTitle className="flex items-center gap-2 text-sabeel-primary font-arabic">
                         <Trophy size={20} /> 
                         أفكار ومقترحات
@@ -412,17 +419,17 @@ const Members = () => {
                       <div className="space-y-4">
                         <Textarea 
                           placeholder="شارك أفكارك الجديدة هنا..." 
-                          className="min-h-[120px]"
+                          className="min-h-[120px] border-sabeel-primary/30 focus:border-sabeel-primary focus:ring-1 focus:ring-sabeel-primary"
                         />
                         <div className="flex gap-2 justify-end">
-                          <Button variant="outline">حفظ كمسودة</Button>
-                          <Button className="bg-sabeel-primary hover:bg-sabeel-secondary">إرسال الفكرة</Button>
+                          <Button variant="outline" className="border-sabeel-primary/30 text-sabeel-primary hover:bg-sabeel-primary/10">حفظ كمسودة</Button>
+                          <Button className="bg-gradient-to-r from-sabeel-primary to-sabeel-secondary hover:from-sabeel-secondary hover:to-sabeel-primary text-white">إرسال الفكرة</Button>
                         </div>
                       </div>
 
                       <div className="mt-6 space-y-4">
-                        <h3 className="font-semibold text-sabeel-primary text-lg">أحدث الأفكار المطروحة</h3>
-                        <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <h3 className="font-semibold text-sabeel-primary text-lg font-arabic">أحدث الأفكار المطروحة</h3>
+                        <div className="p-4 bg-white dark:bg-gray-700/50 rounded-lg border-2 border-sabeel-primary/20 hover:shadow-md transition-all">
                           <div className="flex justify-between items-start">
                             <div className="font-medium">دمج تقنيات الذكاء الاصطناعي في التفسير</div>
                             <div className="text-xs text-gray-500">قبل 2 أيام</div>
@@ -438,10 +445,10 @@ const Members = () => {
                               تفسير
                             </span>
                           </div>
-                          <div className="mt-3 text-sabeel-primary text-sm cursor-pointer">3 تعليقات</div>
+                          <div className="mt-3 text-sabeel-primary text-sm cursor-pointer hover:text-sabeel-accent">3 تعليقات</div>
                         </div>
                         
-                        <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <div className="p-4 bg-white dark:bg-gray-700/50 rounded-lg border-2 border-sabeel-primary/20 hover:shadow-md transition-all">
                           <div className="flex justify-between items-start">
                             <div className="font-medium">تطبيق للهواتف الذكية</div>
                             <div className="text-xs text-gray-500">قبل 5 أيام</div>
@@ -457,21 +464,21 @@ const Members = () => {
                               تطوير
                             </span>
                           </div>
-                          <div className="mt-3 text-sabeel-primary text-sm cursor-pointer">7 تعليقات</div>
+                          <div className="mt-3 text-sabeel-primary text-sm cursor-pointer hover:text-sabeel-accent">7 تعليقات</div>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="border-2 border-sabeel-primary/20">
-                    <CardHeader className="bg-sabeel-primary/10 pb-2">
+                  <Card className="border-2 border-sabeel-primary/20 shadow-md bg-gradient-to-br from-white to-sabeel-primary/5">
+                    <CardHeader className="bg-gradient-to-r from-sabeel-primary/20 to-sabeel-accent/10 pb-2">
                       <CardTitle className="flex items-center gap-2 text-sabeel-primary font-arabic">
                         <ChartBar size={20} /> 
                         التقدم العام للمشروع
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-4">
-                      <div className="rounded-lg bg-gradient-to-br from-sabeel-primary to-sabeel-secondary p-6 text-white mb-4">
+                      <div className="rounded-lg bg-gradient-to-br from-sabeel-primary to-sabeel-accent p-6 text-white mb-4 shadow-md">
                         <div className="text-center mb-3">
                           <div className="text-4xl font-bold">65%</div>
                           <div className="text-sm opacity-80">التقدم العام في المشروع</div>
@@ -487,7 +494,7 @@ const Members = () => {
                           <span className="font-semibold">80%</span>
                         </div>
                         <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="bg-sabeel-primary h-full rounded-full" style={{ width: '80%' }}></div>
+                          <div className="bg-gradient-to-r from-sabeel-primary to-sabeel-secondary h-full rounded-full" style={{ width: '80%' }}></div>
                         </div>
                         
                         <div className="flex justify-between text-sm">
@@ -495,7 +502,7 @@ const Members = () => {
                           <span className="font-semibold">60%</span>
                         </div>
                         <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="bg-sabeel-accent h-full rounded-full" style={{ width: '60%' }}></div>
+                          <div className="bg-gradient-to-r from-sabeel-accent to-sabeel-primary h-full rounded-full" style={{ width: '60%' }}></div>
                         </div>
                         
                         <div className="flex justify-between text-sm">
@@ -503,7 +510,7 @@ const Members = () => {
                           <span className="font-semibold">75%</span>
                         </div>
                         <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="bg-sabeel-secondary h-full rounded-full" style={{ width: '75%' }}></div>
+                          <div className="bg-gradient-to-r from-sabeel-secondary to-sabeel-accent h-full rounded-full" style={{ width: '75%' }}></div>
                         </div>
                         
                         <div className="flex justify-between text-sm">
@@ -511,7 +518,7 @@ const Members = () => {
                           <span className="font-semibold">45%</span>
                         </div>
                         <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div className="bg-sabeel-primary h-full rounded-full" style={{ width: '45%' }}></div>
+                          <div className="bg-gradient-to-r from-sabeel-primary to-sabeel-accent h-full rounded-full" style={{ width: '45%' }}></div>
                         </div>
                       </div>
                     </CardContent>
@@ -521,7 +528,7 @@ const Members = () => {
             </Tabs>
 
             {/* Secret Gradients Pattern at Bottom */}
-            <div className="mt-8 h-3 bg-gradient-to-r from-sabeel-primary via-sabeel-accent to-sabeel-secondary rounded-full opacity-70"></div>
+            <div className="mt-8 h-3 bg-gradient-to-r from-sabeel-primary via-sabeel-accent to-sabeel-secondary rounded-full opacity-70 shadow"></div>
           </div>
         )}
       </main>
