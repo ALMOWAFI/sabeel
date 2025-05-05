@@ -5,12 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
-import { Lock, Eye, EyeOff } from 'lucide-react';
+import { Lock, Eye, EyeOff, Check, Loader } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Login = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -30,8 +32,13 @@ const Login = () => {
       });
       // Set premium authentication
       sessionStorage.setItem('member-authenticated', 'premium');
-      setIsLoading(false);
-      navigate('/members');
+      setIsSuccess(true);
+      
+      // Add a slight delay before redirecting to show the success animation
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate('/members');
+      }, 1200);
     } 
     // For regular members (any other password)
     else if (password.length >= 4) {
@@ -42,8 +49,13 @@ const Login = () => {
       });
       // Set regular authentication
       sessionStorage.setItem('member-authenticated', 'regular');
-      setIsLoading(false);
-      navigate('/members');
+      setIsSuccess(true);
+      
+      // Add a slight delay before redirecting to show the success animation
+      setTimeout(() => {
+        setIsLoading(false);
+        navigate('/members');
+      }, 1200);
     } 
     // For invalid passwords
     else {
@@ -62,15 +74,23 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md p-8">
+      <motion.div 
+        className="w-full max-w-md p-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="p-6">
             {/* Logo and Header */}
             <div className="flex flex-col items-center mb-6">
-              <img 
+              <motion.img 
                 src="/lovable-uploads/a5fcac1b-54eb-4860-bfd4-5ec4efa83444.png" 
                 alt="Islamic Emblem" 
                 className="w-20 h-20 object-contain mb-4"
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.5 }}
               />
               <h1 className="text-2xl font-bold text-gray-800 mb-1 text-center">منطقة الأعضاء</h1>
               <div className="text-sm text-gray-500 text-center">
@@ -97,11 +117,13 @@ const Login = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 pr-10 text-right"
                     dir="rtl"
+                    disabled={isSuccess}
                   />
                   <button
                     type="button"
                     onClick={togglePasswordVisibility}
                     className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600"
+                    disabled={isSuccess}
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -117,15 +139,51 @@ const Login = () => {
               
               <Button 
                 type="submit"
-                disabled={isLoading}
-                className="w-full"
+                disabled={isLoading || isSuccess}
+                className={`w-full transition-all duration-300 ${
+                  isSuccess ? 'bg-green-500 hover:bg-green-600' : ''
+                }`}
               >
-                {isLoading ? 'جاري التحقق...' : 'دخول'}
+                {isLoading ? (
+                  <span className="flex items-center justify-center">
+                    <Loader className="h-4 w-4 mr-2 animate-spin" />
+                    جاري التحقق...
+                  </span>
+                ) : isSuccess ? (
+                  <span className="flex items-center justify-center">
+                    <Check className="h-5 w-5 mr-2" />
+                    تم تسجيل الدخول
+                  </span>
+                ) : (
+                  'دخول'
+                )}
               </Button>
             </form>
+            
+            {/* Success Animation */}
+            {isSuccess && (
+              <motion.div 
+                className="mt-6 flex justify-center"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <motion.div 
+                  className="flex flex-col items-center"
+                  initial={{ y: 10 }}
+                  animate={{ y: 0 }}
+                  transition={{ 
+                    y: { repeat: Infinity, repeatType: "reverse", duration: 0.8 }
+                  }}
+                >
+                  <div className="text-green-500 font-semibold mb-2">جاري تحويلك إلى لوحة التحكم</div>
+                  <div className="w-8 h-8 border-t-4 border-green-500 border-solid rounded-full animate-spin"></div>
+                </motion.div>
+              </motion.div>
+            )}
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
