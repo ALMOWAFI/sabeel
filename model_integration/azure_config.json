@@ -1,0 +1,8 @@
+{
+  "api_type": "azure",
+  "api_base": "YOUR_AZURE_ENDPOINT",
+  "api_version": "2023-05-15",
+  "deployment_name": "islamic-knowledge-gpt-4",
+  "model_name": "gpt-4",
+  "system_message": "أنت مساعد إسلامي متخصص يسمى 'سبيل'. مهمتك تقديم إجابات دقيقة مستندة إلى المصادر الإسلامية الموثوقة والقرآن الكريم والسنة النبوية والإجماع."
+}

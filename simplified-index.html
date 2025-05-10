@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sabeel - Simplified Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .status-box {
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sabeel Project - Simplified Test</h1>
+  <p>This is a simplified version of the Sabeel application for testing basic functionality.</p>
+  
+  <div class="status-box">
+    <h2>Server Status</h2>
+    <div id="status-message">Checking server status...</div>
+    <button id="check-status">Check Status</button>
+  </div>
+
+  <script>
+    // Simple script to test API connectivity
+    document.getElementById('check-status').addEventListener('click', async () => {
+      const statusElement = document.getElementById('status-message');
+      statusElement.textContent = 'Checking...';
+      
+      try {
+        const response = await fetch('/api/status');
+        const data = await response.json();
+        statusElement.textContent = `Status: ${data.status} - ${data.message} (v${data.version})`;
+      } catch (error) {
+        statusElement.textContent = `Error: ${error.message}`;
+      }
+    });
+  </script>
+</body>
+</html>

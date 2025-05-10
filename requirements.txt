@@ -1,0 +1,33 @@
+transformers>=4.29.0
+torch>=2.0.0
+datasets>=2.12.0
+peft>=0.4.0
+bitsandbytes>=0.39.0
+accelerate>=0.20.0
+arabert
+pyarabic
+farasapy
+tqdm
+matplotlib
+scikit-learn
+scipy
+beautifulsoup4
+requests
+python-dotenv
+flask>=2.0.0
+pillow
+opencv-python
+pytesseract
+sentencepiece
+safetensors
+wandb
+huggingface_hub
+# Arabic NLP Tools
+camel-tools>=1.5.0
+# API Clients
+tashkeel-client>=0.1.0
+# Educational Integrations
+h5p-python>=0.1.0
+# Community Integrations
+discourse-python>=0.1.0
+matrix-nio>=0.20.0

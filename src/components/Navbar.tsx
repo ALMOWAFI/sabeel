@@ -46,6 +46,7 @@ const Navbar = () => {
     { name: 'للتقنيين', path: '/for-technologists' },
     { name: 'المجتمع', path: '/community' },
     { name: 'الموارد', path: '/resources' },
+    { name: 'المنصة', path: '/dashboard' },
   ];
 
   return (
