@@ -1,0 +1,168 @@
+{
+  "instance": {
+    "name": "Sabeel Islamic Media",
+    "shortDescription": "مكتبة سبيل للمحتوى الإسلامي المرئي والصوتي",
+    "description": "منصة الفيديو الإسلامية التعليمية والدعوية المفتوحة المصدر - جزء من مشروع منصة سبيل للمعرفة الإسلامية",
+    "terms": "منصة سبيل لمشاركة المحتوى المرئي هي منصة تعليمية ودعوية تلتزم بنشر العلم النافع والدعوة الصحيحة وفق منهج أهل السنة والجماعة.",
+    "defaultClientRoute": "/videos/discover",
+    "isNSFW": false,
+    "defaultNSFWPolicy": "do_not_list",
+    "customizations": {
+      "javascript": "/custom/sabeel-integration.js",
+      "css": "/custom/sabeel-theme.css"
+    },
+    "signup": {
+      "enabled": true,
+      "limit": 100,
+      "requiresEmailVerification": true,
+      "requiresApproval": true
+    }
+  },
+  "theme": {
+    "default": "sabeel-default",
+    "enableDarkTheme": true
+  },
+  "services": {
+    "twitter": {
+      "username": "@SabeelKnowledge"
+    }
+  },
+  "cache": {
+    "previews": {
+      "size": 500
+    },
+    "captions": {
+      "size": 500
+    }
+  },
+  "videoChannels": [
+    {
+      "name": "quran-recitation",
+      "displayName": "تلاوات قرآنية",
+      "description": "قناة مخصصة لتلاوات القرآن الكريم بمختلف الروايات",
+      "support": "قناة تضم تلاوات متنوعة من كبار القراء والمشايخ",
+      "tags": ["quran", "recitation", "tajweed"]
+    },
+    {
+      "name": "lectures",
+      "displayName": "دروس ومحاضرات",
+      "description": "دروس ومحاضرات علمية في مختلف العلوم الشرعية",
+      "support": "قناة تضم محاضرات متنوعة في العقيدة والفقه والسيرة والتفسير والحديث",
+      "tags": ["lectures", "fiqh", "aqeedah", "tafsir", "hadith"]
+    },
+    {
+      "name": "educational",
+      "displayName": "المواد التعليمية",
+      "description": "منصة للمواد التعليمية والدورات العلمية الشرعية",
+      "support": "قناة تضم الدورات التعليمية المنهجية والتأصيلية",
+      "tags": ["education", "courses", "tutorials"]
+    },
+    {
+      "name": "events",
+      "displayName": "فعاليات ومؤتمرات",
+      "description": "تغطية للفعاليات والمؤتمرات الإسلامية العلمية",
+      "support": "قناة لتوثيق المؤتمرات والندوات والفعاليات العلمية",
+      "tags": ["events", "conferences", "seminars"]
+    },
+    {
+      "name": "children",
+      "displayName": "محتوى الأطفال",
+      "description": "محتوى تعليمي إسلامي موجه للأطفال والناشئة",
+      "support": "قناة متخصصة في تقديم المحتوى الهادف للأطفال بطريقة تربوية محببة",
+      "tags": ["children", "kids", "education"]
+    }
+  ],
+  "transcoding": {
+    "enabled": true,
+    "allowAdditionalExtensions": false,
+    "allowAudioFiles": true,
+    "threads": 2,
+    "resolutions": {
+      "0p": false,
+      "240p": true,
+      "360p": true,
+      "480p": true,
+      "720p": true,
+      "1080p": true,
+      "1440p": false,
+      "2160p": false
+    },
+    "webVideos": {
+      "enabled": true
+    },
+    "hls": {
+      "enabled": true
+    }
+  },
+  "live": {
+    "enabled": true,
+    "allowReplay": true,
+    "maxDuration": 43200,
+    "maxInstanceLives": 20,
+    "maxUserLives": 3,
+    "transcoding": {
+      "enabled": true,
+      "threads": 2,
+      "resolutions": {
+        "240p": false,
+        "360p": true,
+        "480p": true,
+        "720p": true,
+        "1080p": true,
+        "1440p": false,
+        "2160p": false
+      }
+    }
+  },
+  "search": {
+    "remoteUri": {
+      "users": true,
+      "anonymous": true
+    },
+    "searchIndex": {
+      "enabled": true,
+      "url": "https://search.sabeel.knowledge",
+      "disableLocalSearch": false,
+      "isDefaultSearch": true
+    }
+  },
+  "import": {
+    "videos": {
+      "http": {
+        "enabled": true
+      },
+      "torrent": {
+        "enabled": true
+      }
+    }
+  },
+  "trending": {
+    "videos": {
+      "algorithms": {
+        "enabled": ["hot", "most-viewed", "most-liked", "recently-added"],
+        "default": "most-viewed"
+      }
+    }
+  },
+  "customCategories": [
+    { "id": 1, "label": "تلاوات قرآنية" },
+    { "id": 2, "label": "دروس عقيدة" },
+    { "id": 3, "label": "دروس فقه" },
+    { "id": 4, "label": "دروس حديث" },
+    { "id": 5, "label": "دروس تفسير" },
+    { "id": 6, "label": "دروس سيرة" },
+    { "id": 7, "label": "محاضرات عامة" },
+    { "id": 8, "label": "دورات علمية" },
+    { "id": 9, "label": "برامج أطفال" },
+    { "id": 10, "label": "مؤتمرات وندوات" }
+  ],
+  "customLanguages": [
+    { "id": 1, "label": "العربية" },
+    { "id": 2, "label": "English" },
+    { "id": 3, "label": "اردو" },
+    { "id": 4, "label": "Français" },
+    { "id": 5, "label": "Türkçe" },
+    { "id": 6, "label": "Bahasa Indonesia" },
+    { "id": 7, "label": "فارسی" }
+  ]
+}

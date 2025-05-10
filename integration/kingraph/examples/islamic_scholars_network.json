@@ -1,0 +1,285 @@
+{
+  "nodes": [
+    {
+      "id": "ibn-taymiyyah",
+      "label": "ابن تيمية",
+      "type": "scholar",
+      "description": "تقي الدين أحمد بن عبد الحليم بن عبد السلام بن تيمية الحراني، أحد علماء أهل السنة البارزين",
+      "birthYear": "661",
+      "deathYear": "728",
+      "school": "حنبلي"
+    },
+    {
+      "id": "ibn-qayyim",
+      "label": "ابن قيم الجوزية",
+      "type": "scholar",
+      "description": "محمد بن أبي بكر بن أيوب بن سعد الزرعي الدمشقي، من تلاميذ ابن تيمية",
+      "birthYear": "691",
+      "deathYear": "751",
+      "school": "حنبلي"
+    },
+    {
+      "id": "ibn-kathir",
+      "label": "ابن كثير",
+      "type": "scholar",
+      "description": "إسماعيل بن عمر بن كثير القرشي، المفسر والمؤرخ والمحدث",
+      "birthYear": "701",
+      "deathYear": "774",
+      "school": "شافعي"
+    },
+    {
+      "id": "ibn-rajab",
+      "label": "ابن رجب الحنبلي",
+      "type": "scholar",
+      "description": "عبد الرحمن بن أحمد بن رجب الحنبلي، من علماء الحديث والفقه",
+      "birthYear": "736",
+      "deathYear": "795",
+      "school": "حنبلي"
+    },
+    {
+      "id": "al-shatibi",
+      "label": "الشاطبي",
+      "type": "scholar",
+      "description": "إبراهيم بن موسى بن محمد اللخمي الغرناطي الشاطبي، من علماء الأصول والمقاصد",
+      "birthYear": "720",
+      "deathYear": "790",
+      "school": "مالكي"
+    },
+    {
+      "id": "al-dhahabi",
+      "label": "الذهبي",
+      "type": "scholar",
+      "description": "شمس الدين محمد بن أحمد بن عثمان الذهبي، المؤرخ والمحدث",
+      "birthYear": "673",
+      "deathYear": "748",
+      "school": "شافعي"
+    },
+    {
+      "id": "tafsir-ibn-kathir",
+      "label": "تفسير ابن كثير",
+      "type": "book",
+      "description": "تفسير القرآن العظيم، من أشهر كتب التفسير بالمأثور",
+      "author": "ابن كثير",
+      "year": "774"
+    },
+    {
+      "id": "al-bidaya-wa-al-nihaya",
+      "label": "البداية والنهاية",
+      "type": "book",
+      "description": "كتاب في التاريخ الإسلامي يبدأ من قصة الخلق وحتى عصر المؤلف",
+      "author": "ابن كثير",
+      "year": "774"
+    },
+    {
+      "id": "zad-al-maad",
+      "label": "زاد المعاد",
+      "type": "book",
+      "description": "كتاب في هدي النبي محمد صلى الله عليه وسلم في حياته وعباداته ومعاملاته",
+      "author": "ابن قيم الجوزية",
+      "year": "751"
+    },
+    {
+      "id": "madarij-al-salikin",
+      "label": "مدارج السالكين",
+      "type": "book",
+      "description": "كتاب في السلوك والتربية الروحية وشرح منازل السائرين",
+      "author": "ابن قيم الجوزية",
+      "year": "751"
+    },
+    {
+      "id": "al-muwafaqat",
+      "label": "الموافقات",
+      "type": "book",
+      "description": "كتاب في أصول الفقه والمقاصد الشرعية",
+      "author": "الشاطبي",
+      "year": "790"
+    },
+    {
+      "id": "majmoo-al-fatawa",
+      "label": "مجموع الفتاوى",
+      "type": "book",
+      "description": "جمع فتاوى ومسائل ابن تيمية في العقيدة والفقه والتفسير",
+      "author": "ابن تيمية",
+      "year": "728"
+    },
+    {
+      "id": "baqarah-255",
+      "label": "آية الكرسي",
+      "type": "verse",
+      "description": "اللَّهُ لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ...",
+      "surah": "البقرة",
+      "ayah": "255"
+    },
+    {
+      "id": "hanafi-school",
+      "label": "المذهب الحنفي",
+      "type": "school",
+      "description": "أحد المذاهب الفقهية الأربعة عند أهل السنة، نسبة إلى الإمام أبو حنيفة النعمان",
+      "founder": "أبو حنيفة النعمان",
+      "founding_year": "150"
+    },
+    {
+      "id": "maliki-school",
+      "label": "المذهب المالكي",
+      "type": "school",
+      "description": "أحد المذاهب الفقهية الأربعة عند أهل السنة، نسبة إلى الإمام مالك بن أنس",
+      "founder": "مالك بن أنس",
+      "founding_year": "179"
+    },
+    {
+      "id": "shafii-school",
+      "label": "المذهب الشافعي",
+      "type": "school",
+      "description": "أحد المذاهب الفقهية الأربعة عند أهل السنة، نسبة إلى الإمام محمد بن إدريس الشافعي",
+      "founder": "محمد بن إدريس الشافعي",
+      "founding_year": "204"
+    },
+    {
+      "id": "hanbali-school",
+      "label": "المذهب الحنبلي",
+      "type": "school",
+      "description": "أحد المذاهب الفقهية الأربعة عند أهل السنة، نسبة إلى الإمام أحمد بن حنبل",
+      "founder": "أحمد بن حنبل",
+      "founding_year": "241"
+    },
+    {
+      "id": "damascus-siege",
+      "label": "حصار دمشق",
+      "type": "event",
+      "description": "حصار مدينة دمشق من قبل قوات المغول بقيادة هولاكو",
+      "year": "658",
+      "location": "دمشق"
+    },
+    {
+      "id": "hadith-niyyah",
+      "label": "حديث النية",
+      "type": "hadith",
+      "description": "إنما الأعمال بالنيات، وإنما لكل امرئ ما نوى...",
+      "narrator": "عمر بن الخطاب",
+      "collection": "صحيح البخاري",
+      "number": "1"
+    }
+  ],
+  "edges": [
+    {
+      "source": "ibn-taymiyyah",
+      "target": "ibn-qayyim",
+      "type": "taught",
+      "label": "أستاذ"
+    },
+    {
+      "source": "ibn-taymiyyah",
+      "target": "ibn-kathir",
+      "type": "taught",
+      "label": "أستاذ"
+    },
+    {
+      "source": "ibn-taymiyyah",
+      "target": "majmoo-al-fatawa",
+      "type": "authored",
+      "label": "مؤلف"
+    },
+    {
+      "source": "ibn-kathir",
+      "target": "tafsir-ibn-kathir",
+      "type": "authored",
+      "label": "مؤلف"
+    },
+    {
+      "source": "ibn-kathir",
+      "target": "al-bidaya-wa-al-nihaya",
+      "type": "authored",
+      "label": "مؤلف"
+    },
+    {
+      "source": "ibn-qayyim",
+      "target": "zad-al-maad",
+      "type": "authored",
+      "label": "مؤلف"
+    },
+    {
+      "source": "ibn-qayyim",
+      "target": "madarij-al-salikin",
+      "type": "authored",
+      "label": "مؤلف"
+    },
+    {
+      "source": "al-shatibi",
+      "target": "al-muwafaqat",
+      "type": "authored",
+      "label": "مؤلف"
+    },
+    {
+      "source": "ibn-taymiyyah",
+      "target": "hanbali-school",
+      "type": "influenced",
+      "label": "ينتسب إلى"
+    },
+    {
+      "source": "ibn-qayyim",
+      "target": "hanbali-school",
+      "type": "influenced",
+      "label": "ينتسب إلى"
+    },
+    {
+      "source": "ibn-kathir",
+      "target": "shafii-school",
+      "type": "influenced",
+      "label": "ينتسب إلى"
+    },
+    {
+      "source": "al-shatibi",
+      "target": "maliki-school",
+      "type": "influenced",
+      "label": "ينتسب إلى"
+    },
+    {
+      "source": "al-dhahabi",
+      "target": "shafii-school",
+      "type": "influenced",
+      "label": "ينتسب إلى"
+    },
+    {
+      "source": "ibn-rajab",
+      "target": "hanbali-school",
+      "type": "influenced",
+      "label": "ينتسب إلى"
+    },
+    {
+      "source": "tafsir-ibn-kathir",
+      "target": "baqarah-255",
+      "type": "explained",
+      "label": "يفسر"
+    },
+    {
+      "source": "ibn-taymiyyah",
+      "target": "damascus-siege",
+      "type": "contemporaryOf",
+      "label": "عاصر"
+    },
+    {
+      "source": "al-dhahabi",
+      "target": "ibn-taymiyyah",
+      "type": "contemporaryOf",
+      "label": "عاصر"
+    },
+    {
+      "source": "zad-al-maad",
+      "target": "hadith-niyyah",
+      "type": "referenced",
+      "label": "يستشهد بـ"
+    },
+    {
+      "source": "ibn-kathir",
+      "target": "ibn-taymiyyah",
+      "type": "influenced",
+      "label": "تأثر بـ"
+    },
+    {
+      "source": "ibn-qayyim",
+      "target": "ibn-taymiyyah",
+      "type": "influenced",
+      "label": "تأثر بـ"
+    }
+  ]
+}

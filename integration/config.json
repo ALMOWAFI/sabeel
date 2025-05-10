@@ -1,0 +1,148 @@
+{
+  "version": "1.0.0",
+  "name": "Sabeel Integration Configuration",
+  "description": "Central configuration for all educational systems integrated into the Sabeel Islamic knowledge platform",
+  "integration_status": {
+    "edX": {
+      "enabled": true,
+      "version": "1.0.0",
+      "description": "Open-source MOOC platform integrated for Islamic courses",
+      "config_path": "./edx/sabeel_theme_config.json",
+      "xblocks_path": "./edx/quran_xblock.py",
+      "api_endpoint": "https://api.sabeel.app/edx"
+    },
+    "Canvas": {
+      "enabled": true,
+      "version": "1.0.0",
+      "description": "Learning management system integrated for Islamic education",
+      "theme_path": "./canvas/custom_theme.js",
+      "api_path": "./canvas/sabeel_canvas_api.js",
+      "api_endpoint": "https://api.sabeel.app/canvas"
+    },
+    "PeerTube": {
+      "enabled": true,
+      "version": "1.0.0",
+      "description": "Open-source video platform for Islamic lectures and content",
+      "config_path": "./peertube/config.json",
+      "integration_path": "./peertube/sabeel-integration.js",
+      "api_endpoint": "https://api.sabeel.app/peertube"
+    },
+    "H5P": {
+      "enabled": true,
+      "version": "1.0.0",
+      "description": "Interactive content creation platform for Islamic education",
+      "config_path": "./h5p/sabeel-h5p-config.json",
+      "components_path": "./h5p/QuranExplorer",
+      "api_endpoint": "https://api.sabeel.app/h5p"
+    },
+    "JupyterBook": {
+      "enabled": true,
+      "version": "1.0.0",
+      "description": "Publishing platform for interactive Islamic research documents",
+      "config_path": "./jupyter/config.yml",
+      "examples_path": "./jupyter/quran_text_analysis.ipynb",
+      "api_endpoint": "https://api.sabeel.app/jupyterbook"
+    },
+    "Kingraph": {
+      "enabled": true,
+      "version": "1.0.0",
+      "description": "Knowledge graph visualization for Islamic scholarly relationships",
+      "src_path": "./kingraph/src",
+      "examples_path": "./kingraph/examples",
+      "api_endpoint": "https://api.sabeel.app/kingraph"
+    },
+    "Appwrite": {
+      "enabled": true,
+      "version": "1.0.0",
+      "description": "Backend services for authentication, database, storage, and serverless functions",
+      "config_path": "./appwrite/config/appwrite.config.js",
+      "src_path": "./appwrite/src",
+      "api_endpoint": "https://api.sabeel.app/appwrite"
+    },
+    "TensorFlow": {
+      "enabled": true,
+      "version": "1.0.0",
+      "description": "AI-powered Islamic text analysis and knowledge graph enrichment",
+      "config_path": "./tfjs/config/tensorflow.config.js",
+      "src_path": "./tfjs/src",
+      "api_endpoint": "https://api.sabeel.app/tfjs"
+    }
+  },
+  "authentication": {
+    "method": "oauth2",
+    "single_sign_on": true,
+    "jwt_enabled": true,
+    "session_timeout": 3600,
+    "auth_endpoint": "https://auth.sabeel.app"
+  },
+  "api_gateway": {
+    "enabled": true,
+    "base_url": "https://api.sabeel.app",
+    "rate_limit": 1000,
+    "require_auth": true,
+    "cors_enabled": true,
+    "allowed_origins": ["https://sabeel.app", "https://www.sabeel.app", "https://learn.sabeel.app"]
+  },
+  "data_storage": {
+    "primary": "mongodb",
+    "media_storage": "s3",
+    "analytics_storage": "bigquery",
+    "backup_frequency": "daily"
+  },
+  "customization": {
+    "allow_theme_customization": true,
+    "allow_component_customization": true,
+    "allow_api_extensions": true,
+    "custom_plugin_directory": "./plugins"
+  },
+  "localization": {
+    "default_language": "ar",
+    "supported_languages": ["ar", "en", "fr", "ur", "id", "ms", "tr"],
+    "rtl_languages": ["ar", "ur"],
+    "translations_path": "./translations"
+  },
+  "deployment": {
+    "environment": "production",
+    "docker_enabled": true,
+    "kubernetes_enabled": false,
+    "auto_scaling": true,
+    "cdn_enabled": true
+  },
+  "features": {
+    "quran_tools": {
+      "enabled": true,
+      "tajweed_highlighting": true,
+      "word_by_word_translation": true,
+      "multi_reciter_support": true,
+      "tafsir_integration": true
+    },
+    "hadith_tools": {
+      "enabled": true,
+      "chain_analysis": true,
+      "narrator_biographies": true,
+      "grading_system": true,
+      "cross_reference": true
+    },
+    "research_tools": {
+      "enabled": true,
+      "arabic_nlp": true,
+      "citation_management": true,
+      "comparative_analysis": true,
+      "text_search": true
+    },
+    "learning_tools": {
+      "enabled": true,
+      "progress_tracking": true,
+      "knowledge_assessment": true,
+      "certificate_issuance": true,
+      "peer_review": true
+    },
+    "community_tools": {
+      "enabled": true,
+      "discussion_forums": true,
+      "scholar_verification": true,
+      "collaborative_editing": true,
+      "knowledge_contribution": true
+    }
+  }
+}

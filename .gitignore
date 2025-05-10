@@ -7,14 +7,32 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+.pnp
+.pnp.js
+.yarn/
+
+# Build outputs
 dist
 dist-ssr
+build
 *.local
+.cache
+
+# Testing
+coverage
+__tests__
+**/*.test.*
+**/*.spec.*
+
+# Environment variables
+.env
+.env.*
+!.env.example
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+.vscode
 .idea
 .DS_Store
 *.suo
@@ -22,3 +40,57 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Legacy files and directories
+appwrite/
+**/*appwrite*
+migrations/
+scripts/
+templates/
+docs/
+
+# Package manager files
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Other development files
+.turbo
+.eslintcache
+.stylelintcache
+.next
+next-env.d.ts
+.nuxt
+.git
+.github
+**/*.md
+**/*.mdx
+TODO.txt
+CHANGELOG.md
+CONTRIBUTING.md
+LICENSE
+
+# Debug files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Media assets and large files
+public/assets/videos
+public/assets/models
+public/assets/audio
+public/locales
+public/data
+
+# Configuration files that aren't needed for deployment
+tsconfig.json
+tsconfig.*.json
+.eslintrc.*
+.prettierrc.*
+.stylelintrc.*
+.babelrc
+jest.config.*
+vite.config.ts
+tailwind.config.*
+postcss.config.*
+

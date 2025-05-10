@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سبيل - عرض الرسم البياني المعرفي الإسلامي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/cytoscape@3.23.0/dist/cytoscape.min.js"></script>
+    <script src="https://unpkg.com/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.js"></script>
+    <script src="https://unpkg.com/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://unpkg.com/cytoscape-popper@2.0.0/cytoscape-popper.js"></script>
+    <script src="https://unpkg.com/tippy.js@6.3.7/dist/tippy-bundle.umd.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #10B981;
+            --secondary-color: #6366F1;
+            --dark-color: #0F172A;
+            --light-color: #F8FAFC;
+            --text-color: #1E293B;
+            --border-color: #E2E8F0;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Amiri', Arial, sans-serif;
+            background-color: #F1F5F9;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .description {
+            margin-bottom: 2rem;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        
+        .graph-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .graph-title {
+            text-align: center;
+            padding: 1rem;
+            background-color: var(--dark-color);
+            color: white;
+        }
+        
+        .graph-wrapper {
+            height: 700px;
+            width: 100%;
+        }
+        
+        .graph-controls {
+            padding: 1rem;
+            background-color: var(--light-color);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--primary-color);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+        
+        .node-type-legend {
+            margin-top: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            color: #64748B;
+        }
+        
+        .dark-mode {
+            --text-color: #F1F5F9;
+            --border-color: #334155;
+            background-color: #0F172A;
+            color: var(--text-color);
+        }
+        
+        .dark-mode .graph-container {
+            background-color: #1E293B;
+        }
+        
+        .dark-mode .graph-controls {
+            background-color: #1E293B;
+            border-color: #334155;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .graph-wrapper {
+                height: 500px;
+            }
+            
+            .graph-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>شبكة المعرفة الإسلامية التفاعلية</h1>
+            <p>منصة سبيل للمعرفة الإسلامية</p>
+        </header>
+        
+        <p class="description">
+            استكشف العلاقات بين العلماء والكتب والمفاهيم الإسلامية من خلال هذا الرسم البياني التفاعلي.
+            <br>
+            حرك مؤشر الفأرة فوق العناصر لعرض المزيد من المعلومات، واضغط على العناصر لاستكشاف العلاقات.
+        </p>
+        
+        <div class="graph-container">
+            <div class="graph-controls">
+                <div class="theme-toggle">
+                    <span>الوضع المظلم</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div id="graph-root" class="graph-wrapper"></div>
+        </div>
+        
+        <div class="node-type-legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #10B981;"></div>
+                <span>عالِم</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #0F172A;"></div>
+                <span>كتاب</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #F43F5E;"></div>
+                <span>مذهب</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #8B5CF6;"></div>
+                <span>حديث</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #FBBF24;"></div>
+                <span>آية</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #475569;"></div>
+                <span>حدث</span>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            <p>منصة سبيل للمعرفة الإسلامية © 2025</p>
+        </footer>
+    </div>
+    
+    <script type="text/babel">
+        // Simple stub for React component that will eventually use the full IslamicKnowledgeGraph component
+        function KnowledgeGraphDemo() {
+            const [theme, setTheme] = React.useState('light');
+            const graphContainerRef = React.useRef(null);
+            const kingraphRef = React.useRef(null);
+            
+            // Sample data (would normally be imported)
+            async function loadGraphData() {
+                try {
+                    const response = await fetch('islamic_scholars_network.json');
+                    const data = await response.json();
+                    return data;
+                } catch (error) {
+                    console.error('Error loading graph data:', error);
+                    return null;
+                }
+            }
+            
+            React.useEffect(() => {
+                async function initializeGraph() {
+                    if (!graphContainerRef.current || kingraphRef.current) return;
+                    
+                    // Mock SabeelKingraph for demo purposes
+                    const createMockKingraph = (container, theme) => {
+                        return {
+                            // Create Cytoscape instance
+                            cy: cytoscape({
+                                container: container,
+                                elements: [],
+                                style: [
+                                    {
+                                        selector: 'node',
+                                        style: {
+                                            'background-color': '#999',
+                                            'label': 'data(label)',
+                                            'text-valign': 'center',
+                                            'text-halign': 'center',
+                                            'font-size': '14px',
+                                            'text-wrap': 'wrap',
+                                            'text-max-width': '120px',
+                                            'min-zoomed-font-size': '10px',
+                                            'width': 40,
+                                            'height': 40
+                                        }
+                                    },
+                                    {
+                                        selector: 'edge',
+                                        style: {
+                                            'width': 1,
+                                            'line-color': '#ccc',
+                                            'target-arrow-color': '#ccc',
+                                            'target-arrow-shape': 'triangle',
+                                            'curve-style': 'bezier',
+                                            'arrow-scale': 1.2,
+                                            'label': 'data(label)',
+                                            'font-size': '12px',
+                                            'text-rotation': 'autorotate'
+                                        }
+                                    },
+                                    {
+                                        selector: 'node.scholar',
+                                        style: {
+                                            'background-color': '#10B981',
+                                            'shape': 'ellipse'
+                                        }
+                                    },
+                                    {
+                                        selector: 'node.book',
+                                        style: {
+                                            'background-color': '#0F172A',
+                                            'shape': 'rectangle'
+                                        }
+                                    },
+                                    {
+                                        selector: 'node.school',
+                                        style: {
+                                            'background-color': '#F43F5E',
+                                            'shape': 'hexagon'
+                                        }
+                                    },
+                                    {
+                                        selector: 'node.hadith',
+                                        style: {
+                                            'background-color': '#8B5CF6',
+                                            'shape': 'round-rectangle'
+                                        }
+                                    },
+                                    {
+                                        selector: 'node.verse',
+                                        style: {
+                                            'background-color': '#FBBF24',
+                                            'shape': 'star'
+                                        }
+                                    },
+                                    {
+                                        selector: 'node.event',
+                                        style: {
+                                            'background-color': '#475569',
+                                            'shape': 'octagon'
+                                        }
+                                    },
+                                    {
+                                        selector: 'edge.taught',
+                                        style: {
+                                            'line-color': '#84CC16',
+                                            'target-arrow-color': '#84CC16',
+                                            'width': 2
+                                        }
+                                    },
+                                    {
+                                        selector: 'edge.authored',
+                                        style: {
+                                            'line-color': '#3B82F6',
+                                            'target-arrow-color': '#3B82F6',
+                                            'width': 2
+                                        }
+                                    },
+                                    {
+                                        selector: 'edge.influenced',
+                                        style: {
+                                            'line-color': '#06B6D4',
+                                            'target-arrow-color': '#06B6D4',
+                                            'width': 1
+                                        }
+                                    }
+                                ],
+                                layout: {
+                                    name: 'cose-bilkent',
+                                    padding: 50,
+                                    animate: true,
+                                    animationDuration: 500,
+                                    randomize: true,
+                                    nodeRepulsion: 8000,
+                                    idealEdgeLength: 150
+                                }
+                            }),
+                            
+                            // Load data into the graph
+                            loadData: function(data) {
+                                this.cy.elements().remove();
+                                
+                                // Add nodes
+                                const nodes = (data.nodes || []).map(node => ({
+                                    data: {
+                                        id: node.id,
+                                        label: node.label || node.id,
+                                        type: node.type || 'concept',
+                                        ...node
+                                    },
+                                    classes: node.type || 'concept'
+                                }));
+                                
+                                // Add edges
+                                const edges = (data.edges || []).map(edge => ({
+                                    data: {
+                                        id: edge.id || `${edge.source}-${edge.target}`,
+                                        source: edge.source,
+                                        target: edge.target,
+                                        label: edge.label || '',
+                                        type: edge.type || 'related',
+                                        ...edge
+                                    },
+                                    classes: edge.type || 'related'
+                                }));
+                                
+                                this.cy.add([...nodes, ...edges]);
+                                
+                                // Apply layout
+                                const layout = this.cy.layout({
+                                    name: 'cose-bilkent',
+                                    padding: 50,
+                                    animate: true
+                                });
+                                
+                                layout.run();
+                                this.cy.fit();
+                                
+                                // Setup tooltips
+                                this.setupTooltips();
+                            },
+                            
+                            // Set up tooltips for nodes
+                            setupTooltips: function() {
+                                this.cy.nodes().forEach(node => {
+                                    const ref = node.popperRef();
+                                    const data = node.data();
+                                    
+                                    const content = document.createElement('div');
+                                    content.className = 'tooltip-content';
+                                    content.style.backgroundColor = theme === 'dark' ? '#334155' : 'white';
+                                    content.style.color = theme === 'dark' ? 'white' : 'black';
+                                    content.style.border = theme === 'dark' ? '1px solid #475569' : '1px solid #ddd';
+                                    content.style.padding = '10px';
+                                    content.style.borderRadius = '4px';
+                                    content.style.maxWidth = '250px';
+                                    content.style.fontSize = '14px';
+                                    content.style.direction = 'rtl';
+                                    content.style.textAlign = 'right';
+                                    
+                                    let html = `<h3 style="margin-top:0;margin-bottom:5px;">${data.label}</h3>`;
+                                    
+                                    if (data.description) {
+                                        html += `<p style="margin-bottom:8px;font-size:13px;">${data.description}</p>`;
+                                    }
+                                    
+                                    content.innerHTML = html;
+                                    
+                                    tippy(ref, {
+                                        content,
+                                        trigger: 'manual',
+                                        placement: 'top',
+                                        arrow: true,
+                                        theme: theme === 'dark' ? 'material' : 'light'
+                                    });
+                                });
+                                
+                                this.cy.on('mouseover', 'node', function(e) {
+                                    const node = e.target;
+                                    if (node._tippy) node._tippy.show();
+                                });
+                                
+                                this.cy.on('mouseout', 'node', function(e) {
+                                    const node = e.target;
+                                    if (node._tippy) node._tippy.hide();
+                                });
+                            },
+                            
+                            // Apply theme
+                            applyTheme: function(theme) {
+                                if (theme === 'dark') {
+                                    this.cy.container().style.backgroundColor = '#1E293B';
+                                } else {
+                                    this.cy.container().style.backgroundColor = 'white';
+                                }
+                            }
+                        };
+                    };
+                    
+                    // Initialize mock Kingraph
+                    kingraphRef.current = createMockKingraph(graphContainerRef.current, theme);
+                    
+                    // Load data
+                    const data = await loadGraphData();
+                    if (data) {
+                        kingraphRef.current.loadData(data);
+                    }
+                }
+                
+                initializeGraph();
+                
+                return () => {
+                    if (kingraphRef.current && kingraphRef.current.cy) {
+                        kingraphRef.current.cy.destroy();
+                        kingraphRef.current = null;
+                    }
+                };
+            }, []);
+            
+            React.useEffect(() => {
+                if (kingraphRef.current) {
+                    kingraphRef.current.applyTheme(theme);
+                }
+                
+                // Update document body class for theme
+                if (theme === 'dark') {
+                    document.body.classList.add('dark-mode');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                }
+            }, [theme]);
+            
+            return (
+                <div ref={graphContainerRef} style={{ width: '100%', height: '100%' }}></div>
+            );
+        }
+        
+        // Render the demo component
+        ReactDOM.render(
+            <KnowledgeGraphDemo />,
+            document.getElementById('graph-root')
+        );
+        
+        // Handle theme toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('change', function() {
+            const event = new CustomEvent('themeToggle', {
+                detail: {
+                    theme: this.checked ? 'dark' : 'light'
+                }
+            });
+            window.dispatchEvent(event);
+            
+            if (this.checked) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+{
+  "platform": "sabeel",
+  "h5pVersion": "1.24.0",
+  "customization": {
+    "frame": true,
+    "copyright": true,
+    "embed": true,
+    "download": true,
+    "icon": "sabeel-logo.svg",
+    "fullscreen": true,
+    "about": "/sabeel-h5p-about",
+    "customStyles": "/sabeel-h5p/styles.css"
+  },
+  "contentTypes": {
+    "enabled": [
+      "H5P.QuranExplorer",
+      "H5P.IslamicFlashcards",
+      "H5P.HadithQuiz",
+      "H5P.IslamicTimeline",
+      "H5P.InteractiveVideo",
+      "H5P.CoursePresentation",
+      "H5P.QuestionSet",
+      "H5P.Column",
+      "H5P.AdvancedText",
+      "H5P.Audio",
+      "H5P.Blanks",
+      "H5P.DragQuestion",
+      "H5P.Dialogcards",
+      "H5P.DocumentationTool",
+      "H5P.DragText",
+      "H5P.Essay",
+      "H5P.ImageHotspots",
+      "H5P.ImageSequencing",
+      "H5P.MarkTheWords",
+      "H5P.MemoryGame",
+      "H5P.MultiChoice",
+      "H5P.Summary",
+      "H5P.TrueFalse"
+    ],
+    "recommended": [
+      "H5P.QuranExplorer",
+      "H5P.IslamicFlashcards",
+      "H5P.HadithQuiz",
+      "H5P.IslamicTimeline",
+      "H5P.InteractiveVideo",
+      "H5P.CoursePresentation"
+    ]
+  },
+  "contentTypeSettings": {
+    "H5P.QuranExplorer": {
+      "arabicFont": "Uthmanic",
+      "defaultTranslation": "en-sahih",
+      "availableTranslations": [
+        "en-sahih", "fr-hamidullah", "ur-jalandhry", "tr-diyanet", "id-indonesian", "ru-kuliev"
+      ],
+      "availableRecitations": [
+        "ar.alafasy", "ar.hudhaify", "ar.minshawi", "ar.abdulbasit"
+      ],
+      "defaultTajweedDisplay": true,
+      "verseHighlighting": true,
+      "showWordByWordTranslation": true
+    },
+    "H5P.HadithQuiz": {
+      "availableCollections": [
+        "bukhari", "muslim", "abudawud", "tirmidhi", "nasai", "ibnmajah", "malik", "riyadussalihin"
+      ],
+      "verificationApi": "/api/sabeel/hadith-verification",
+      "gradingSystem": "islamic-studies-standard"
+    },
+    "H5P.IslamicTimeline": {
+      "defaultEra": "hijri",
+      "showGregorianDates": true,
+      "predefinedPeriods": [
+        "prophet-life", "rashidun-caliphate", "umayyad-caliphate", "abbasid-caliphate", "ottoman-empire"
+      ],
+      "majorEvents": [
+        "hijrah", "badr", "conquest-makkah", "farewell-pilgrimage"
+      ]
+    }
+  },
+  "libraries": {
+    "custom": [
+      {
+        "machineName": "H5P.QuranExplorer",
+        "majorVersion": 1,
+        "minorVersion": 0,
+        "patchVersion": 0,
+        "runnable": 1,
+        "preloadedJs": [
+          {"path": "scripts/quran-explorer.js"}
+        ],
+        "preloadedCss": [
+          {"path": "styles/quran-explorer.css"}
+        ],
+        "preloadedDependencies": [
+          {"machineName": "H5P.JoubelUI", "majorVersion": 1, "minorVersion": 3},
+          {"machineName": "FontAwesome", "majorVersion": 4, "minorVersion": 5}
+        ]
+      },
+      {
+        "machineName": "H5P.IslamicFlashcards",
+        "majorVersion": 1,
+        "minorVersion": 0,
+        "patchVersion": 0,
+        "runnable": 1,
+        "preloadedJs": [
+          {"path": "scripts/islamic-flashcards.js"}
+        ],
+        "preloadedCss": [
+          {"path": "styles/islamic-flashcards.css"}
+        ],
+        "preloadedDependencies": [
+          {"machineName": "H5P.JoubelUI", "majorVersion": 1, "minorVersion": 3},
+          {"machineName": "H5P.Flashcards", "majorVersion": 1, "minorVersion": 5}
+        ]
+      },
+      {
+        "machineName": "H5P.HadithQuiz",
+        "majorVersion": 1,
+        "minorVersion": 0,
+        "patchVersion": 0,
+        "runnable": 1,
+        "preloadedJs": [
+          {"path": "scripts/hadith-quiz.js"}
+        ],
+        "preloadedCss": [
+          {"path": "styles/hadith-quiz.css"}
+        ],
+        "preloadedDependencies": [
+          {"machineName": "H5P.JoubelUI", "majorVersion": 1, "minorVersion": 3},
+          {"machineName": "H5P.Question", "majorVersion": 1, "minorVersion": 4}
+        ]
+      },
+      {
+        "machineName": "H5P.IslamicTimeline",
+        "majorVersion": 1,
+        "minorVersion": 0,
+        "patchVersion": 0,
+        "runnable": 1,
+        "preloadedJs": [
+          {"path": "scripts/islamic-timeline.js"}
+        ],
+        "preloadedCss": [
+          {"path": "styles/islamic-timeline.css"}
+        ],
+        "preloadedDependencies": [
+          {"machineName": "H5P.Timeline", "majorVersion": 1, "minorVersion": 1},
+          {"machineName": "H5P.JoubelUI", "majorVersion": 1, "minorVersion": 3}
+        ]
+      }
+    ]
+  },
+  "storage": {
+    "contentFilesDir": "h5p/content",
+    "librariesDir": "h5p/libraries",
+    "temporaryFilesDir": "h5p/temp",
+    "exportDir": "h5p/exports",
+    "allowedFileExtensions": [
+      "json", "png", "jpg", "jpeg", "gif", "svg", "mp3", "mp4", "webm", "ogg", "wav", "ogv", "pdf", "xml", "vtt", "csv"
+    ]
+  },
+  "development": {
+    "devMode": false,
+    "libraryDevelopment": false,
+    "enableLinting": true
+  }
+}

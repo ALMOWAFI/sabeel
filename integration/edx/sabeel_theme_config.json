@@ -1,0 +1,42 @@
+{
+  "name": "sabeel",
+  "display_name": "Sabeel Islamic Knowledge Platform",
+  "theme_dir": "../themes/sabeel",
+  "version": "1.0.0",
+  "description": "Islamic knowledge theme for edX platform",
+  "color_scheme": {
+    "primary": "#10B981",
+    "secondary": "#0F172A",
+    "accent": "#6366F1",
+    "light": "#F8FAFC",
+    "dark": "#1E293B"
+  },
+  "typography": {
+    "font_family_arabic": "\"Noto Sans Arabic\", sans-serif",
+    "font_family_latin": "\"Poppins\", sans-serif",
+    "direction": "rtl"
+  },
+  "features": {
+    "islamic_calendar": true,
+    "arabic_content": true,
+    "quran_citation": true,
+    "hadith_verification": true,
+    "scholar_verification": true
+  },
+  "customizations": {
+    "dashboard": {
+      "enable_islamic_courses_section": true,
+      "enable_scholar_verification": true,
+      "enable_prayer_times": true
+    },
+    "course": {
+      "enable_quran_tools": true,
+      "enable_hadith_reference": true,
+      "enable_islamic_glossary": true
+    },
+    "discussion": {
+      "enable_islamic_etiquette": true,
+      "enable_scholar_badges": true
+    }
+  }
+}

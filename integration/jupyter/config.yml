@@ -1,0 +1,129 @@
+# Configuration file for Sabeel Jupyter Book integration
+# This configures the Jupyter Book for Islamic scholarly research
+
+# Book settings
+title: مكتبة سبيل للبحوث الإسلامية التفاعلية
+author: منصة سبيل للمعرفة الإسلامية
+logo: sabeel-logo.png
+copyright: "2025"
+exclude_patterns: [_build, Thumbs.db, .DS_Store, "**.ipynb_checkpoints"]
+only_build_toc_files: false
+
+# Execution settings
+execute:
+  execute_notebooks: auto
+  cache: ""
+  timeout: 60
+  run_in_temp: true
+  allow_errors: false
+  stderr_output: show
+
+# HTML settings
+html:
+  favicon: favicon.ico
+  use_edit_page_button: true
+  use_repository_button: true
+  use_issues_button: true
+  use_multitoc_numbering: true
+  extra_navbar: ""
+  extra_footer: |
+    <div class="footer-sabeel">
+      <p>منصة سبيل للمعرفة الإسلامية - بوابة البحث العلمي التفاعلي</p>
+    </div>
+  google_analytics_id: ""
+  home_page_in_navbar: true
+  baseurl: "/islamic-research"
+  announcement: "مرحباً بكم في مكتبة سبيل للبحوث العلمية الإسلامية التفاعلية"
+  use_fullscreen_button: true
+  
+# Launch button settings
+launch_buttons:
+  notebook_interface: "classic"
+  binderhub_url: "https://mybinder.org"
+  colab_url: "https://colab.research.google.com"
+  thebe: true
+
+# Repository settings
+repository:
+  url: https://github.com/ALMOWAFI/sabeel-research
+  path_to_book: research
+  branch: main
+
+# Advanced settings
+sphinx:
+  extra_extensions:
+    - sphinx_thebe
+    - sphinx_tabs.tabs
+    - sphinxcontrib.bibtex
+    - sphinx_togglebutton
+    - sphinx_rtd_theme
+    - nbsphinx
+    - jupyter_sphinx
+    - sphinx_copybutton
+    - sphinx_comments
+    - arabic_reshaper
+    - bidi.algorithm
+  config:
+    language: ar
+    html_theme: pydata_sphinx_theme
+    html_theme_options:
+      primary_color: "#10B981"
+      secondary_color: "#0F172A"
+      accent_color: "#6366F1"
+      use_download_button: true
+      repository_url: https://github.com/ALMOWAFI/sabeel-research
+      repository_branch: main
+      path_to_docs: research
+      logo_only: true
+      display_version: true
+      navigation_with_keys: true
+      collapse_navigation: true
+      sticky_navigation: true
+      navigation_depth: 4
+      prev_next_buttons_location: bottom
+      style_nav_header_background: "#10B981"
+    html_sidebars:
+      "**": ["search-field.html", "sidebar-nav-bs.html", "sidebar-ethical-ads.html"]
+    html_context:
+      default_mode: light
+    bibtex_bibfiles:
+      - references.bib
+    bibtex_reference_style: author_year
+    bibtex_default_style: alpha
+    
+# Arabic language and bidirectional text support
+parse:
+  myst_enable_extensions:
+    - amsmath
+    - colon_fence
+    - deflist
+    - dollarmath
+    - html_admonition
+    - html_image
+    - linkify
+    - replacements
+    - smartquotes
+    - substitution
+    - tasklist
+    - arabic_rtl
+  myst_rtl_languages:
+    - arabic
+    - ar
+  myst_rtl_to_ltr_languages:
+    - english
+    - en
+
+# Sabeel custom extensions
+sabeel:
+  enable_islamic_citations: true
+  enable_quran_references: true
+  enable_hadith_citations: true
+  enable_scholar_references: true
+  islamic_references_api: "https://api.sabeel.app/references"
+  quran_api: "https://api.sabeel.app/quran"
+  hadith_api: "https://api.sabeel.app/hadith"
+  scholars_api: "https://api.sabeel.app/scholars"
+  enable_interactive_tafsir: true
+  enable_hadith_analyzer: true
+  enable_text_analyzer: true
+  enable_arabic_nlp: true
