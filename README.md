@@ -1,73 +1,51 @@
-# Welcome to your Lovable project
+# Sabeel (سبيل) - Islamic Knowledge Platform
 
-## Project info
+## About Sabeel
 
-**URL**: https://lovable.dev/projects/b040340c-2f07-4dfb-8630-54f26a70808f
+Sabeel (سبيل) is a comprehensive Islamic knowledge platform built to serve scholars, technologists, and the Muslim community at large. The platform integrates cutting-edge AI technology with rich Islamic content to provide a modern, accessible interface for Islamic knowledge exploration.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- **Interactive Quran Explorer**: Navigate and study the Quran with advanced search capabilities
+- **Hadith Search**: Find authentic hadiths across multiple collections
+- **Knowledge Graph**: Visualize connections between Islamic concepts and scholars
+- **AI Assistant**: Sabeel Chatbot for answering Islamic questions
+- **Scholar Dashboard**: Tools specifically designed for Islamic scholars
+- **Community Forums**: Spaces for discussion and collaboration
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/b040340c-2f07-4dfb-8630-54f26a70808f) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
+## Technologies Used
 
 This project is built with:
 
-- Vite
-- TypeScript
 - React
+- TypeScript
+- Vite
 - shadcn-ui
 - Tailwind CSS
+- TanStack Query for API handling
 
-## How can I deploy this project?
+## Getting Started
 
-Simply open [Lovable](https://lovable.dev/projects/b040340c-2f07-4dfb-8630-54f26a70808f) and click on Share -> Publish.
+To set up this project locally:
 
-## Can I connect a custom domain to my Lovable project?
+```sh
+# Clone the repository
+git clone https://github.com/ALMOWAFI/sabeel.git
 
-Yes, you can!
+# Navigate to the project directory
+cd sabeel
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+# Install dependencies
+npm install
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+# Start the development server
+npm run dev
+```
+
+## Project Structure
+
+- `/src/components`: UI components and Islamic knowledge tools
+- `/src/pages`: Application pages (Dashboard, Resources, etc.)
+- `/src/hooks`: Custom React hooks
+- `/src/lib`: Utility functions and configuration files
+- `/model_integration`: AI model integration for Islamic knowledge
