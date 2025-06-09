@@ -12,6 +12,8 @@ Sabeel (سبيل) is a comprehensive Islamic knowledge platform built to serve s
 - **AI Assistant**: Sabeel Chatbot for answering Islamic questions
 - **Scholar Dashboard**: Tools specifically designed for Islamic scholars
 - **Community Forums**: Spaces for discussion and collaboration
+- **Job Openings Board**: Find and apply for jobs in Islamic organizations
+- **WhatsApp Group Join**: Connect with community groups via WhatsApp
 
 ## Technologies Used
 
@@ -20,6 +22,8 @@ This project is built with:
 - React
 - TypeScript
 - Vite
+- Supabase (for authentication and database)
+- TensorFlow.js (for AI-powered features)
 - shadcn-ui
 - Tailwind CSS
 - TanStack Query for API handling
@@ -38,9 +42,22 @@ cd sabeel
 # Install dependencies
 npm install
 
+# Set up environment variables
+cp .env.example .env.local
+
+# Edit .env.local with your Supabase credentials
+# VITE_SUPABASE_URL=your-supabase-url
+# VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+
 # Start the development server
 npm run dev
 ```
+
+### Supabase Setup
+
+1. Create a Supabase project at [supabase.com](https://supabase.com)
+2. Run the database schema in `supabase/schema.sql` in the SQL Editor
+3. Update your environment variables with your Supabase project credentials
 
 ## Project Structure
 

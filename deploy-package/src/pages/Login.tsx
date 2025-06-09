@@ -34,10 +34,10 @@ const Login = () => {
       sessionStorage.setItem('member-authenticated', 'premium');
       setIsSuccess(true);
       
-      // Shorter delay and direct navigation
+      // Shorter delay and direct navigation to secret organization
       setTimeout(() => {
         setIsLoading(false);
-        navigate('/members');
+        navigate('/secret-organization');
       }, 1000);
     } 
     // For regular members (any other password)

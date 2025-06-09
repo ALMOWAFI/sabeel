@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
-import { MessageSquare, Users, Github, BookOpen, Calendar, MessageCircle } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MessageSquare, Users, Github, BookOpen, Calendar, MessageCircle, Briefcase, Phone } from 'lucide-react';
+import JobOpeningsBoard from '@/components/community/JobOpeningsBoard';
+import WhatsAppGroupJoin from '@/components/community/WhatsAppGroupJoin';
 
 const Community = () => {
   return (
@@ -170,6 +173,45 @@ const Community = () => {
           </div>
         </section>
 
+        {/* Supabase Integrated Components */}
+        <section className="py-16 bg-sabeel-light dark:bg-gray-800">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold mb-4 text-sabeel-primary">خدمات المجتمع</h2>
+              <p className="text-lg text-gray-700 dark:text-gray-300 max-w-3xl mx-auto">
+                استفد من خدماتنا المجتمعية للتواصل وإيجاد فرص العمل المناسبة
+              </p>
+            </div>
+            
+            <Tabs defaultValue="jobs" className="max-w-4xl mx-auto">
+              <div className="flex justify-center mb-6">
+                <TabsList className="bg-sabeel-light dark:bg-gray-700">
+                  <TabsTrigger value="jobs" className="flex items-center gap-2">
+                    <Briefcase className="w-4 h-4" />
+                    <span>فرص العمل</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="whatsapp" className="flex items-center gap-2">
+                    <Phone className="w-4 h-4" />
+                    <span>مجموعات واتساب</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+              
+              <TabsContent value="jobs" className="mt-4">
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-md">
+                  <JobOpeningsBoard />
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="whatsapp" className="mt-4">
+                <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-md">
+                  <WhatsAppGroupJoin />
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </section>
+        
         {/* Join Form */}
         <section className="py-16 bg-white dark:bg-gray-900">
           <div className="container mx-auto px-4 md:px-6">

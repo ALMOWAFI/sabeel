@@ -15,7 +15,9 @@ import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { MessageSquare, Users, Clock, Globe, Check, AlertCircle } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
-import supabase from "@/lib/supabaseConfig";
+import appwriteService from "@/services/AppwriteService";
+import appwriteAuthBridge from "@/services/AppwriteAuthBridge";
+import { Query, ID } from 'appwrite';
 
 interface WhatsAppGroup {
   id: string;
@@ -48,23 +50,25 @@ const WhatsAppGroupJoin: React.FC = () => {
     groupId: ''
   });
   
-  // Fetch WhatsApp groups from Supabase
+  // Fetch WhatsApp groups from Appwrite
   useEffect(() => {
     async function fetchGroups() {
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from('whatsapp_groups')
-          .select('*');
+        const databases = appwriteService.databases;
+        const databaseId = appwriteService.databaseId;
+        const whatsappGroupsCollection = appwriteService.collections.whatsappGroups;
         
-        if (error) {
-          throw error;
-        }
+        // Fetch WhatsApp groups data
+        const response = await databases.listDocuments(
+          databaseId,
+          whatsappGroupsCollection
+        );
         
-        if (data) {
-          // Map database columns to component props
-          const mappedGroups = data.map(group => ({
-            id: group.id,
+        if (response && response.documents) {
+          // Map database documents to component props
+          const mappedGroups = response.documents.map(group => ({
+            id: group.$id,
             name: group.name,
             description: group.description,
             category: group.category as 'knowledge' | 'quran' | 'fiqh' | 'history' | 'community',
@@ -95,20 +99,48 @@ const WhatsAppGroupJoin: React.FC = () => {
     if (group.isPublic && group.inviteLink) {
       window.open(group.inviteLink, '_blank');
       
-      // Record this activity in Supabase
+      // Record this activity in Appwrite
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        // Get current user from our Appwrite auth bridge
+        const userData = await appwriteAuthBridge.getCurrentUser();
         
-        if (user) {
-          // Log the join action
-          await supabase.from('user_activities').insert({
-            user_id: user.id,
-            activity_type: 'whatsapp_group_join',
-            details: { group_id: group.id, group_name: group.name }
-          });
+        if (userData) {
+          const databases = appwriteService.databases;
+          const databaseId = appwriteService.databaseId;
+          const userActivitiesCollection = appwriteService.collections.userActivities;
           
-          // Increment group member count
-          await supabase.rpc('increment_group_member_count', { group_id: group.id });
+          // Log the join action
+          await databases.createDocument(
+            databaseId,
+            userActivitiesCollection,
+            ID.unique(),
+            {
+              user_id: userData.userId,
+              activity_type: 'whatsapp_group_join',
+              details: { group_id: group.id, group_name: group.name }
+            }
+          );
+          
+          // Increment group member count (update the document)
+          // Find the group first
+          const whatsappGroupsCollection = appwriteService.collections.whatsappGroups;
+          const response = await databases.getDocument(
+            databaseId, 
+            whatsappGroupsCollection, 
+            group.id
+          );
+          
+          // Then update the member count
+          if (response) {
+            await databases.updateDocument(
+              databaseId,
+              whatsappGroupsCollection,
+              group.id,
+              {
+                member_count: (response.member_count || 0) + 1
+              }
+            );
+          }
         }
       } catch (error) {
         console.error('Error logging group join:', error);
@@ -137,10 +169,10 @@ const WhatsAppGroupJoin: React.FC = () => {
     setLoading(true);
     
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+      // Get current user from Appwrite auth bridge
+      const userData = await appwriteAuthBridge.getCurrentUser();
       
-      if (!user) {
+      if (!userData) {
         toast({
           variant: "destructive",
           title: "يرجى تسجيل الدخول",
@@ -149,11 +181,17 @@ const WhatsAppGroupJoin: React.FC = () => {
         return;
       }
       
-      // Insert the join request in user_activities table
-      const { error } = await supabase
-        .from('user_activities')
-        .insert({
-          user_id: user.id,
+      // Insert the join request in user_activities collection using Appwrite
+      const databases = appwriteService.databases;
+      const databaseId = appwriteService.databaseId;
+      const userActivitiesCollection = appwriteService.collections.userActivities;
+      
+      await databases.createDocument(
+        databaseId,
+        userActivitiesCollection,
+        ID.unique(),
+        {
+          user_id: userData.userId,
           activity_type: 'whatsapp_group_join_request',
           details: {
             group_id: requestData.groupId,
@@ -161,9 +199,8 @@ const WhatsAppGroupJoin: React.FC = () => {
             phone: requestData.phone,
             reason: requestData.reason
           }
-        });
-      
-      if (error) throw error;
+        }
+      );
       
       toast({
         title: "تم إرسال الطلب",

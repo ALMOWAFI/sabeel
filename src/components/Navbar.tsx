@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Moon, Sun, Lock } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import PremiumIndicator from '@/components/PremiumIndicator';
 
 const Navbar = () => {
   const isMobile = useIsMobile();
@@ -98,11 +99,14 @@ const Navbar = () => {
           </Button>
 
           {/* Members Login Button */}
-          <Button asChild variant="ghost" size="icon" className="ml-2 text-sabeel-secondary hover:bg-sabeel-primary/10">
-            <Link to="/login" aria-label="تسجيل الدخول">
-              <Lock size={18} />
-            </Link>
-          </Button>
+          <div className="flex items-center gap-2">
+            <PremiumIndicator />
+            <Button asChild variant="ghost" size="icon" className="ml-2 text-sabeel-secondary hover:bg-sabeel-primary/10">
+              <Link to="/login" aria-label="تسجيل الدخول">
+                <Lock size={18} />
+              </Link>
+            </Button>
+          </div>
           
           <Button variant="ghost" size="icon" className="ml-2" onClick={toggleTheme}>
             {darkMode ? <Sun size={20} /> : <Moon size={20} />}

@@ -148,7 +148,9 @@ class TensorflowService {
           text: this.formatUserProfileForEmbedding(user)
         });
         
-        this.userEmbedding = new Float32Array(response.data.embedding);
+        // Extract user embedding from response
+        const responseData = response.data as { embedding: number[] };
+        this.userEmbedding = new Float32Array(responseData.embedding);
       } else {
         // Client-side embedding generation would go here if implemented
         // This would require loading TensorFlow.js in the browser
@@ -315,15 +317,22 @@ class TensorflowService {
         textType
       });
       
-      return response.data;
+      return response.data as TextAnalysisResult;
     } catch (error) {
       console.error('Failed to analyze text:', error);
-      // Return a basic analysis with empty data
+      // Return a basic analysis with empty data that satisfies TextAnalysisResult interface
       return {
         topics: [],
         sentiment: { positive: 0, neutral: 1, negative: 0 },
         entities: [],
-        summary: ''
+        summary: 'Unable to analyze text due to an error.',
+        entitiesWithSalience: [],
+        categories: [],
+        language: 'en',
+        syntax: {
+          tokens: [],
+          sentences: []
+        }
       } as TextAnalysisResult;
     }
   }
@@ -331,11 +340,11 @@ class TensorflowService {
   /**
    * Find related content based on provided text
    */
-  public async findRelatedContent(text: string, limit: number = 5): Promise<any[]> {
+  public async findRelatedContent(text: string, limit: number = 5): Promise<SearchResult[]> {
     await this.ensureInitialized();
     
     try {
-      const response = await axios.post<{relatedContent: any[]}>(`${API_ENDPOINTS.TEXT_ANALYSIS}/related-content`, {
+      const response = await axios.post<{relatedContent: SearchResult[]}>(`${API_ENDPOINTS.TEXT_ANALYSIS}/related-content`, {
         text,
         limit
       });

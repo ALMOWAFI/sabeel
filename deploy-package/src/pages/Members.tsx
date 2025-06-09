@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import SchoolIcon from '@mui/icons-material/School';
 import Footer from '@/components/Footer';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +17,9 @@ import {
   Inbox, 
   BookText, 
   Trophy,
-  Crown
+  Crown,
+  Sword,
+  Shield
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -25,6 +29,7 @@ import { motion } from 'framer-motion';
 const Members = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [memberType, setMemberType] = useState<'regular' | 'premium' | null>(null);
+  const [showOrganizersPromo, setShowOrganizersPromo] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -129,6 +134,51 @@ const Members = () => {
                         <div className="inline-block px-3 py-1 rounded-full bg-gradient-to-r from-yellow-500 to-amber-600 text-white text-sm">
                           عضوية بريميوم
                         </div>
+                        <div className="flex gap-2 justify-end">
+                          <Button 
+                            className="bg-gradient-to-r from-emerald-600 to-blue-500 hover:from-blue-500 hover:to-emerald-600 text-white border-2 border-emerald-400/30 shadow-lg"
+                            onClick={() => navigate('/collaborative-workspace')}
+                            size="sm"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4" />
+                              <span>مساحة العمل المشتركة</span>
+                            </div>
+                          </Button>
+                          
+                          <Button 
+                            className="bg-gradient-to-r from-indigo-600 to-violet-500 hover:from-violet-500 hover:to-indigo-600 text-white border-2 border-indigo-400/30 shadow-lg"
+                            onClick={() => navigate('/ai-content-verifier')}
+                            size="sm"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4" />
+                              <span>المحتوى الذكي</span>
+                            </div>
+                          </Button>
+                          
+                          <Button 
+                            variant="contained"
+                            color="secondary"
+                            startIcon={<SchoolIcon />}
+                            component={RouterLink}
+                            to="/messiri-llm"
+                            sx={{ mt: 2, width: "100%" }}
+                          >
+                            المسيري LLM
+                          </Button>
+                          
+                          <Button 
+                            className="bg-gradient-to-r from-purple-600 to-indigo-500 hover:from-indigo-500 hover:to-purple-600 text-white border-2 border-purple-400/30 shadow-lg"
+                            onClick={() => navigate('/secret-organization')}
+                            size="sm"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4" />
+                              <span>المنظمة السرية</span>
+                            </div>
+                          </Button>
+                        </div>
                       </div>
                     ) : (
                       <div className="inline-block px-3 py-1 rounded-full bg-sabeel-primary text-white text-sm mt-1">
@@ -181,13 +231,25 @@ const Members = () => {
                     <Crown className="h-8 w-8 text-white" />
                   </div>
                   
-                  <div>
+                  <div className="flex-1">
                     <h3 className="text-xl font-bold text-yellow-700 dark:text-amber-400 font-arabic mb-2">
                       مرحباً بك في منطقة العضوية المميزة!
                     </h3>
                     <p className="text-amber-800/70 dark:text-amber-300/80">
                       تمتع بميزات حصرية للأعضاء المميزين، بما في ذلك المحتوى المتقدم والفعاليات الخاصة والدعم الشخصي.
                     </p>
+                  </div>
+                  
+                  <div className="flex-shrink-0">
+                    <Button 
+                      className="bg-gradient-to-r from-yellow-600 to-amber-500 hover:from-amber-500 hover:to-yellow-600 text-white border-2 border-amber-400/30 shadow-lg"
+                      onClick={() => navigate('/organizers')}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Sword className="h-4 w-4" />
+                        <span>منطقة المنظمين</span>
+                      </div>
+                    </Button>
                   </div>
                 </div>
                 

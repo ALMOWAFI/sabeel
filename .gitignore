@@ -64,6 +64,7 @@ next-env.d.ts
 .git
 .github
 **/*.md
+!README.md
 **/*.mdx
 TODO.txt
 CHANGELOG.md

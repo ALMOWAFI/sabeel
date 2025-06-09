@@ -8,30 +8,27 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Save, Settings as SettingsIcon } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import { UserPreferencesService, UserPreferences } from "@/services/UserPreferencesService";
 
 interface SabeelSettingsProps {
   onClose: () => void;
-}
-
-interface UserPreferences {
-  madhab: string;
-  language: string;
-  useSourceCitations: boolean;
-  autoTranslate: boolean;
-  uiDirection: 'rtl' | 'ltr';
 }
 
 const SabeelSettings: React.FC<SabeelSettingsProps> = ({ onClose }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [preferences, setPreferences] = useState<UserPreferences>({
-    madhab: 'any', // Default to "any" madhab
-    language: 'arabic',
+  const [preferences, setPreferences] = useState<Partial<UserPreferences>>({
+    madhab: 'any',
+    language: 'ar',
     useSourceCitations: true,
     autoTranslate: false,
-    uiDirection: 'rtl'
+    uiDirection: 'rtl',
+    theme: 'light'
   });
+
+  // Get the UserPreferencesService instance
+  const preferencesService = UserPreferencesService.getInstance();
 
   // Load saved preferences on component mount
   useEffect(() => {
@@ -39,34 +36,18 @@ const SabeelSettings: React.FC<SabeelSettingsProps> = ({ onClose }) => {
       try {
         setLoading(true);
         
-        // First try to load from localStorage
-        const savedPrefs = localStorage.getItem('sabeelPreferences');
-        if (savedPrefs) {
-          setPreferences(JSON.parse(savedPrefs));
-          setLoading(false);
-          return;
-        }
+        // Use the service to get preferences
+        const userPrefs = await preferencesService.getPreferences();
         
-        // If not in localStorage, try to fetch from API
-        const response = await fetch('http://localhost:5000/api/user-preferences', {
-          credentials: 'include' // Include cookies
+        // Update the component state with the loaded preferences
+        setPreferences({
+          madhab: userPrefs.content.madhab,
+          language: userPrefs.language,
+          useSourceCitations: userPrefs.useSourceCitations,
+          autoTranslate: userPrefs.autoTranslate,
+          uiDirection: userPrefs.uiDirection,
+          theme: userPrefs.theme
         });
-        
-        if (response.ok) {
-          const data = await response.json();
-          if (data.preferences) {
-            setPreferences({
-              ...preferences,
-              ...data.preferences
-            });
-            
-            // Save to localStorage for future
-            localStorage.setItem('sabeelPreferences', JSON.stringify({
-              ...preferences,
-              ...data.preferences
-            }));
-          }
-        }
       } catch (error) {
         console.error('Error loading preferences:', error);
         toast({
@@ -83,7 +64,7 @@ const SabeelSettings: React.FC<SabeelSettingsProps> = ({ onClose }) => {
   }, [toast]);
   
   // Handle preference changes
-  const handleChange = (field: keyof UserPreferences, value: any) => {
+  const handleChange = (field: keyof typeof preferences, value: any) => {
     setPreferences(prev => ({
       ...prev,
       [field]: value
@@ -95,36 +76,32 @@ const SabeelSettings: React.FC<SabeelSettingsProps> = ({ onClose }) => {
     try {
       setSaving(true);
       
-      // Save to localStorage first (for resilience even if API fails)
-      localStorage.setItem('sabeelPreferences', JSON.stringify(preferences));
-      
-      // Also try to save to the server
-      const response = await fetch('http://localhost:5000/api/user-preferences', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify(preferences)
+      // Use the service to save preferences
+      await preferencesService.savePreferences({
+        language: preferences.language as string,
+        theme: preferences.theme as 'light' | 'dark' | 'system',
+        uiDirection: preferences.uiDirection as 'ltr' | 'rtl',
+        useSourceCitations: preferences.useSourceCitations as boolean,
+        autoTranslate: preferences.autoTranslate as boolean,
+        content: {
+          madhab: preferences.madhab as 'hanafi' | 'shafi' | 'maliki' | 'hanbali' | 'any'
+        }
       });
       
-      if (response.ok) {
-        toast({
-          title: "تم حفظ التفضيلات",
-          description: "تم حفظ إعداداتك بنجاح وسيتم تطبيقها على جميع استخداماتك القادمة."
-        });
-        
-        // Set madhab in localStorage for the chatbot
-        localStorage.setItem('preferredMadhab', preferences.madhab);
-      } else {
-        throw new Error('Failed to save preferences to server');
-      }
+      // Apply the changes immediately
+      preferencesService.applyTheme();
+      preferencesService.applyLanguage();
+      
+      toast({
+        title: "تم حفظ التفضيلات",
+        description: "تم حفظ إعداداتك بنجاح وسيتم تطبيقها على جميع استخداماتك القادمة."
+      });
     } catch (error) {
       console.error('Error saving preferences:', error);
       toast({
         variant: "destructive",
-        title: "تم الحفظ محلياً فقط",
-        description: "تم حفظ إعداداتك على جهازك فقط. لم نتمكن من مزامنتها مع الخادم."
+        title: "خطأ في حفظ التفضيلات",
+        description: "حدث خطأ أثناء حفظ التفضيلات. يرجى المحاولة مرة أخرى."
       });
     } finally {
       setSaving(false);
@@ -157,13 +134,36 @@ const SabeelSettings: React.FC<SabeelSettingsProps> = ({ onClose }) => {
       </CardHeader>
       
       <CardContent className="p-6 space-y-6">
+        {/* Theme Selection */}
+        <div className="space-y-3">
+          <Label className="text-base font-medium">المظهر</Label>
+          <RadioGroup
+            value={preferences.theme as string}
+            onValueChange={(value) => handleChange('theme', value)}
+            className="flex flex-col space-y-1"
+          >
+            <div className="flex items-center space-x-2 space-x-reverse">
+              <RadioGroupItem value="light" id="light" />
+              <Label htmlFor="light">فاتح</Label>
+            </div>
+            <div className="flex items-center space-x-2 space-x-reverse">
+              <RadioGroupItem value="dark" id="dark" />
+              <Label htmlFor="dark">داكن</Label>
+            </div>
+            <div className="flex items-center space-x-2 space-x-reverse">
+              <RadioGroupItem value="system" id="system" />
+              <Label htmlFor="system">حسب إعدادات النظام</Label>
+            </div>
+          </RadioGroup>
+        </div>
+
         {/* Madhab Selection */}
         <div className="space-y-3">
           <Label htmlFor="madhab-select" className="text-base font-medium">
             المذهب المفضل
           </Label>
           <Select
-            value={preferences.madhab}
+            value={preferences.madhab as string}
             onValueChange={(value) => handleChange('madhab', value)}
           >
             <SelectTrigger id="madhab-select">
@@ -173,7 +173,7 @@ const SabeelSettings: React.FC<SabeelSettingsProps> = ({ onClose }) => {
               <SelectItem value="any">جميع المذاهب</SelectItem>
               <SelectItem value="hanafi">المذهب الحنفي</SelectItem>
               <SelectItem value="maliki">المذهب المالكي</SelectItem>
-              <SelectItem value="shafii">المذهب الشافعي</SelectItem>
+              <SelectItem value="shafi">المذهب الشافعي</SelectItem>
               <SelectItem value="hanbali">المذهب الحنبلي</SelectItem>
             </SelectContent>
           </Select>
@@ -186,21 +186,21 @@ const SabeelSettings: React.FC<SabeelSettingsProps> = ({ onClose }) => {
         <div className="space-y-3">
           <Label className="text-base font-medium">لغة التفاعل المفضلة</Label>
           <RadioGroup
-            value={preferences.language}
+            value={preferences.language as string}
             onValueChange={(value) => handleChange('language', value)}
             className="flex flex-col space-y-1"
           >
             <div className="flex items-center space-x-2 space-x-reverse">
-              <RadioGroupItem value="arabic" id="arabic" />
+              <RadioGroupItem value="ar" id="arabic" />
               <Label htmlFor="arabic">العربية</Label>
             </div>
             <div className="flex items-center space-x-2 space-x-reverse">
-              <RadioGroupItem value="english" id="english" />
+              <RadioGroupItem value="en" id="english" />
               <Label htmlFor="english">الإنجليزية</Label>
             </div>
             <div className="flex items-center space-x-2 space-x-reverse">
-              <RadioGroupItem value="both" id="both" />
-              <Label htmlFor="both">كلاهما (العربية مع ترجمة إنجليزية)</Label>
+              <RadioGroupItem value="fr" id="french" />
+              <Label htmlFor="french">الفرنسية</Label>
             </div>
           </RadioGroup>
         </div>
@@ -217,7 +217,7 @@ const SabeelSettings: React.FC<SabeelSettingsProps> = ({ onClose }) => {
           </div>
           <Switch 
             id="source-citations"
-            checked={preferences.useSourceCitations}
+            checked={preferences.useSourceCitations as boolean}
             onCheckedChange={(checked) => handleChange('useSourceCitations', checked)}
           />
         </div>
@@ -234,7 +234,7 @@ const SabeelSettings: React.FC<SabeelSettingsProps> = ({ onClose }) => {
           </div>
           <Switch 
             id="auto-translate"
-            checked={preferences.autoTranslate}
+            checked={preferences.autoTranslate as boolean}
             onCheckedChange={(checked) => handleChange('autoTranslate', checked)}
           />
         </div>
@@ -243,7 +243,7 @@ const SabeelSettings: React.FC<SabeelSettingsProps> = ({ onClose }) => {
         <div className="space-y-3">
           <Label className="text-base font-medium">اتجاه واجهة المستخدم</Label>
           <RadioGroup
-            value={preferences.uiDirection}
+            value={preferences.uiDirection as string}
             onValueChange={(value: 'rtl' | 'ltr') => handleChange('uiDirection', value)}
             className="flex flex-col space-y-1"
           >

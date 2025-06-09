@@ -10,6 +10,7 @@ import { AlertCircle, ServerOff, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { API_ENDPOINTS } from "@/lib/config";
+import { UserPreferencesService } from "@/services/UserPreferencesService";
 
 // Pages
 import Index from "./pages/Index";
@@ -24,6 +25,9 @@ import Portal from "./pages/Portal";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import IntegratedShowcase from "./pages/IntegratedShowcase";
+import CollaborativeWorkspace from "./components/collaboration/CollaborativeWorkspace";
+import IslamicAIVerifier from "./components/protection/IslamicAIVerifier";
+import MessiriLLM from './components/scholars/MessiriLLM';
 
 // Design System & Component Documentation
 import DesignSystem from "./pages/DesignSystem";
@@ -31,7 +35,8 @@ import UIKit from "./pages/UIKit";
 import ComponentShowcase from "./pages/ComponentShowcase";
 import IntegratedDashboard from "./pages/IntegratedDashboard";
 import AIEnhancedKnowledgeExplorer from "./components/AIEnhancedKnowledgeExplorer";
-import AppwriteUserProfile from "./components/AppwriteUserProfile";
+import SupabaseUserProfile from "./components/SupabaseUserProfile";
+import IntegratedIslamicKnowledgeSystem from "./components/enhanced/IntegratedIslamicKnowledgeSystem";
 
 // System context provider
 import { createContext, useContext } from 'react';
@@ -125,20 +130,27 @@ const App = () => {
     return () => clearInterval(interval);
   }, []);
   
-  // Load user preferences from local storage
+  // Load user preferences using UserPreferencesService
   useEffect(() => {
-    // Load language preference and apply direction
-    const savedPrefs = localStorage.getItem('sabeelPreferences');
-    if (savedPrefs) {
+    const loadAndApplyPreferences = async () => {
       try {
-        const prefs = JSON.parse(savedPrefs);
-        if (prefs.uiDirection) {
-          document.documentElement.dir = prefs.uiDirection;
-        }
+        // Get the UserPreferencesService instance
+        const preferencesService = UserPreferencesService.getInstance();
+        
+        // Load preferences
+        await preferencesService.getPreferences();
+        
+        // Apply all preferences
+        preferencesService.applyTheme();
+        preferencesService.applyLanguage();
+        preferencesService.applyAccessibility();
+        preferencesService.applyContentPreferences();
       } catch (e) {
-        console.error('Error parsing preferences:', e);
+        console.error('Error loading preferences:', e);
       }
-    }
+    };
+    
+    loadAndApplyPreferences();
   }, []);
 
   return (
@@ -207,10 +219,15 @@ const App = () => {
               <Route path="/portal" element={<Portal />} />
               <Route path="/login" element={<Login />} />
               <Route path="/members" element={<Members />} />
+              <Route path="/collaborative-workspace" element={<CollaborativeWorkspace />} />
+              <Route path="/secret-organization" element={<SecretOrganization />} />
               
               {/* AI Integration Routes */}
               <Route path="/ai-knowledge-explorer" element={<AIEnhancedKnowledgeExplorer />} />
-              <Route path="/profile" element={<AppwriteUserProfile />} />
+              <Route path="/profile" element={<SupabaseUserProfile />} />
+              <Route path="/islamic-ai-verifier" element={<IslamicAIVerifier />} />
+              <Route path="/messiri-llm" element={<MessiriLLM />} />
+              <Route path="/integrated-islamic-knowledge" element={<IntegratedIslamicKnowledgeSystem />} />
               
               {/* Design System & Component Documentation */}
               <Route path="/design-system" element={<DesignSystem />} />

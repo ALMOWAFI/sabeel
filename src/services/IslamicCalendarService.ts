@@ -6,8 +6,8 @@
  */
 
 import { addDays, format } from 'date-fns';
-import { Client, Databases, Query, ID } from 'appwrite';
-import appwriteConfig from '@/lib/appwriteConfig';
+import { Query, ID } from 'appwrite';
+import appwriteService from './AppwriteService';
 
 // Type for Islamic Events
 export interface IslamicEvent {
@@ -31,19 +31,15 @@ export interface IslamicEvent {
 }
 
 class IslamicCalendarService {
-  private client: Client;
-  private databases: Databases;
+  private client: typeof appwriteService;
+  private databases: any;
   private today: Date;
   private predefinedEvents: IslamicEvent[];
 
   constructor() {
-    this.client = new Client();
-    
-    this.client
-      .setEndpoint(appwriteConfig.endpoint)
-      .setProject(appwriteConfig.projectId);
-      
-    this.databases = new Databases(this.client);
+    // Use centralized AppwriteService instead of creating a new client
+    this.client = appwriteService;
+    this.databases = this.client.databases;
     this.today = new Date();
     
     // Initialize with predefined Islamic events

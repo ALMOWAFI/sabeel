@@ -3,10 +3,10 @@
  * 
  * Component for displaying available job positions and opportunities
  * in Islamic organizations and Sabeel platform itself
+ * Using Appwrite backend
  */
 
 import React, { useState, useEffect } from 'react';
-import supabase from '@/lib/supabaseConfig';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +24,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Briefcase, MapPin, Clock, Filter, Search, ExternalLink, Send } from 'lucide-react';
+import { useToast } from "@/components/ui/use-toast";
+import { Spinner } from "@/components/ui/spinner";
+
+// Import centralized Appwrite services
+import appwriteService from '@/services/AppwriteService';
+import appwriteAuthBridge from '@/services/AppwriteAuthBridge';
+import { Query, ID } from 'appwrite';
 
 // Job position interface
 interface JobPosition {
@@ -42,6 +49,7 @@ interface JobPosition {
 }
 
 const JobOpeningsBoard: React.FC = () => {
+  const { toast } = useToast();
   const [jobs, setJobs] = useState<JobPosition[]>([]);
   const [filter, setFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -50,456 +58,567 @@ const JobOpeningsBoard: React.FC = () => {
     name: '',
     email: '',
     phone: '',
-    coverLetter: '',
-    resumeUrl: ''
+    coverletter: '',
+    resume: null as File | null,
   });
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
-  
-  // Fetch job openings from Supabase
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitResult, setSubmitResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Database configuration from centralized service
+  const databaseId = appwriteService.databaseId;
+  const jobCollectionId = appwriteService.collections.jobOpenings; // Collection for jobs
+  const activityCollectionId = appwriteService.collections.userActivities; // Collection for user activities
+
+  // Fetch jobs on component mount
   useEffect(() => {
-    async function fetchJobs() {
-      try {
-        setIsLoading(true);
-        
-        const { data, error } = await supabase
-          .from('job_openings')
-          .select('*')
-          .eq('is_active', true)
-          .order('posted_date', { ascending: false });
-        
-        if (error) {
-          throw error;
-        }
-        
-        if (data) {
-          // Map database columns to component props
-          const mappedJobs = data.map(job => ({
-            id: job.id,
-            title: job.title,
-            organization: job.organization,
-            location: job.location,
-            type: job.is_remote ? 'remote' : (job.employment_type || 'full-time') as 'full-time' | 'part-time' | 'contract' | 'volunteer' | 'internship' | 'remote',
-            category: job.category as 'teaching' | 'research' | 'tech' | 'admin' | 'community' | 'other',
-            description: job.description,
-            requirements: job.skills_required || [],
-            contactEmail: job.contact_email,
-            postedDate: new Date(job.posted_date).toISOString().split('T')[0],
-            applicationDeadline: job.closing_date ? new Date(job.closing_date).toISOString().split('T')[0] : undefined,
-            isRemote: job.is_remote
-          }));
-          
-          setJobs(mappedJobs);
-        }
-      } catch (error) {
-        console.error('Error fetching job openings:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    
     fetchJobs();
-  }, []);  
-  
-  // Handle filter change
-  const handleFilterChange = (value: string) => {
-    setFilter(value);
-  };
-  
-  // Handle search
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
+  }, []);
+
+  // Fetch jobs from Appwrite
+  const fetchJobs = async () => {
     setIsLoading(true);
-    
+    setError(null);
+
     try {
-      // Search jobs in Supabase using text search
-      const { data, error } = await supabase
-        .from('job_openings')
-        .select('*')
-        .or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,organization.ilike.%${searchQuery}%`)
-        .eq('is_active', true);
+      // Use the centralized appwriteService
+      const databases = appwriteService.databases;
       
-      if (error) throw error;
-      
-      if (data) {
-        // Map database columns to component props as before
-        const mappedJobs = data.map(job => ({
-          id: job.id,
-          title: job.title,
-          organization: job.organization,
-          location: job.location,
-          type: job.is_remote ? 'remote' : (job.employment_type || 'full-time') as 'full-time' | 'part-time' | 'contract' | 'volunteer' | 'internship' | 'remote',
-          category: job.category as 'teaching' | 'research' | 'tech' | 'admin' | 'community' | 'other',
-          description: job.description,
-          requirements: job.skills_required || [],
-          contactEmail: job.contact_email,
-          postedDate: new Date(job.posted_date).toISOString().split('T')[0],
-          applicationDeadline: job.closing_date ? new Date(job.closing_date).toISOString().split('T')[0] : undefined,
-          isRemote: job.is_remote
-        }));
-        
-        setJobs(mappedJobs);
+      // Create query based on filters
+      let queries = [];
+      if (filter !== 'all') {
+        queries.push(Query.equal('category', filter));
       }
-    } catch (error) {
-      console.error('Error searching jobs:', error);
+      
+      // Fetch job listings
+      const response = await databases.listDocuments(
+        databaseId,
+        jobCollectionId,
+        queries
+      );
+      
+      if (!response || !response.documents) {
+        throw new Error('Failed to fetch job listings');
+      }
+      
+      // Format the job data
+      const formattedJobs = response.documents.map((job: any) => ({
+        id: job.$id,
+        title: job.title || 'Untitled Position',
+        organization: job.organization || 'Unknown Organization',
+        location: job.location || 'Remote',
+        type: job.employment_type || 'full-time',
+        category: job.category || 'other',
+        description: job.description || 'No description provided',
+        requirements: job.skills_required || [],
+        contactEmail: job.contact_email || 'contact@example.com',
+        postedDate: job.posted_date ? new Date(job.posted_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        applicationDeadline: job.closing_date ? new Date(job.closing_date).toISOString().split('T')[0] : undefined,
+        isRemote: job.is_remote || false,
+      }));
+      
+      setJobs(formattedJobs);
+    } catch (err) {
+      console.error('Error fetching jobs:', err);
+      setError('Failed to load job openings. Please try again later.');
     } finally {
       setIsLoading(false);
     }
   };
-  
-  // Handle application input change
-  const handleApplicationChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setApplicationData(prev => ({ ...prev, [name]: value }));
-  };
-  
-  // Submit job application
-  const handleSubmitApplication = async (e: React.FormEvent) => {
-    e.preventDefault();
+
+  // Search jobs
+  const searchJobs = async () => {
+    if (!searchQuery.trim()) {
+      fetchJobs();
+      return;
+    }
+    
     setIsLoading(true);
+    setError(null);
     
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+      // Fetch all documents and filter them on the client side
+      // Using our unified DataService abstraction
+      const databases = appwriteService.databases;
       
-      if (!user) {
-        alert('يرجى تسجيل الدخول أولاً قبل التقديم على الوظيفة');
+      const response = await databases.listDocuments(
+        databaseId,
+        jobCollectionId
+      );
+      
+      if (!response || !response.documents) {
+        throw new Error('Failed to fetch job listings');
+      }
+      
+      // Filter jobs by title or description containing the search query
+      const searchLower = searchQuery.toLowerCase();
+      const filteredJobs = response.documents.filter((job: any) => {
+        return (
+          (job.title && job.title.toLowerCase().includes(searchLower)) ||
+          (job.description && job.description.toLowerCase().includes(searchLower)) ||
+          (job.organization && job.organization.toLowerCase().includes(searchLower))
+        );
+      });
+      
+      // If filter is applied, further filter by category
+      const categoryFilteredJobs = filter !== 'all' 
+        ? filteredJobs.filter((job: any) => job.category === filter)
+        : filteredJobs;
+      
+      // Format the job data
+      const formattedJobs = categoryFilteredJobs.map((job: any) => ({
+        id: job.$id,
+        title: job.title || 'Untitled Position',
+        organization: job.organization || 'Unknown Organization',
+        location: job.location || 'Remote',
+        type: job.employment_type || 'full-time',
+        category: job.category || 'other',
+        description: job.description || 'No description provided',
+        requirements: job.skills_required || [],
+        contactEmail: job.contact_email || 'contact@example.com',
+        postedDate: job.posted_date ? new Date(job.posted_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        applicationDeadline: job.closing_date ? new Date(job.closing_date).toISOString().split('T')[0] : undefined,
+        isRemote: job.is_remote || false,
+      }));
+      
+      setJobs(formattedJobs);
+    } catch (err) {
+      console.error('Error searching jobs:', err);
+      setError('Failed to search job openings. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle filter change
+  const handleFilterChange = (value: string) => {
+    setFilter(value);
+    
+    // Re-fetch jobs with new filter
+    if (searchQuery) {
+      searchJobs();
+    } else {
+      fetchJobs();
+    }
+  };
+
+  // Handle search input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Handle search form submission
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    searchJobs();
+  };
+
+  // Handle application form input changes
+  const handleApplicationChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setApplicationData(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Handle file upload for resume
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setApplicationData(prev => ({
+        ...prev,
+        resume: e.target.files![0],
+      }));
+    }
+  };
+
+  // Handle application submission
+  const handleSubmitApplication = async () => {
+    if (!selectedJobId) return;
+    
+    // Validate form
+    if (!applicationData.name || !applicationData.email) {
+      setSubmitResult({
+        success: false,
+        message: 'Please fill in all required fields',
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setSubmitResult(null);
+    
+    try {
+      // Get the current user
+      const userData = await appwriteAuthBridge.getCurrentUser();
+      
+      if (!userData) {
+        setSubmitResult({
+          success: false,
+          message: 'You must be logged in to apply for jobs',
+        });
         return;
       }
       
-      // Store application in user_activities table
-      const { error } = await supabase
-        .from('user_activities')
-        .insert({
-          user_id: user.id,
+      // We would upload the resume to Appwrite Storage in a real implementation
+      // For now, we'll just log that a resume was attached
+      const resumeSubmitted = applicationData.resume !== null;
+      
+      // Save application to user_activities collection using our centralized service
+      const databases = appwriteService.databases;
+      const document = await databases.createDocument(
+        databaseId,
+        activityCollectionId,
+        ID.unique(),
+        {
+          user_id: userData.userId,
           activity_type: 'job_application',
           details: {
             job_id: selectedJobId,
             name: applicationData.name,
+            email: applicationData.email,
             phone: applicationData.phone,
-            coverLetter: applicationData.coverLetter,
-            resumeUrl: applicationData.resumeUrl,
-            applicationDate: new Date().toISOString()
+            coverletter: applicationData.coverletter,
+            resume_submitted: resumeSubmitted,
+            application_date: new Date().toISOString(),
           }
-        });
+        }
+      );
       
-      if (error) throw error;
+      // Success
+      setSubmitResult({
+        success: true,
+        message: 'Your application has been submitted successfully!',
+      });
       
       // Reset form
       setApplicationData({
         name: '',
         email: '',
         phone: '',
-        coverLetter: '',
-        resumeUrl: ''
+        coverletter: '',
+        resume: null,
       });
       
-      setSelectedJobId(null);
+      // Close dialog after a short delay
+      setTimeout(() => {
+        setSelectedJobId(null);
+      }, 2000);
       
-      // Show success message
-      alert('تم إرسال طلبك بنجاح!');
-    } catch (error) {
-      console.error('Error submitting application:', error);
-      alert('حدث خطأ أثناء تقديم الطلب. يرجى المحاولة مرة أخرى.');
+    } catch (err) {
+      console.error('Error submitting application:', err);
+      setSubmitResult({
+        success: false,
+        message: 'Failed to submit your application. Please try again later.',
+      });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
-  
-  // Get filtered jobs
-  const getFilteredJobs = () => {
-    if (filter === 'all') return jobs;
-    return jobs.filter(job => 
-      filter === 'remote' ? job.isRemote : 
-      job.type === filter || job.category === filter
+
+  // Render the category badge with appropriate color
+  const renderCategoryBadge = (category: string) => {
+    const categoryColors: Record<string, string> = {
+      teaching: 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100',
+      research: 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-100',
+      tech: 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100',
+      admin: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100',
+      community: 'bg-pink-100 text-pink-800 dark:bg-pink-800 dark:text-pink-100',
+      other: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100',
+    };
+    
+    return (
+      <Badge className={`${categoryColors[category] || 'bg-gray-100 text-gray-800'}`}>
+        {getCategoryLabel(category)}
+      </Badge>
     );
   };
-  
-  // Get selected job
-  const getSelectedJob = () => {
-    if (!selectedJobId) return null;
-    return jobs.find(job => job.id === selectedJobId);
+
+  // Get localized category label
+  const getCategoryLabel = (category: string) => {
+    const categoryLabels: Record<string, string> = {
+      teaching: 'تعليم',
+      research: 'بحث علمي',
+      tech: 'تقنية',
+      admin: 'إدارة',
+      community: 'مجتمع',
+      other: 'أخرى',
+      all: 'جميع المجالات',
+    };
+    
+    return categoryLabels[category] || category;
   };
-  
-  // Format date to localized string
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'غير محدد';
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('ar-SA');
-    } catch (error) {
-      return dateString;
-    }
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('ar-SA', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }).format(date);
   };
-  
-  // Get type badge
-  const getTypeBadge = (type: string) => {
-    switch (type) {
-      case 'full-time':
-        return <Badge variant="default" className="bg-green-600">دوام كامل</Badge>;
-      case 'part-time':
-        return <Badge variant="default" className="bg-blue-600">دوام جزئي</Badge>;
-      case 'contract':
-        return <Badge variant="default" className="bg-amber-600">عقد</Badge>;
-      case 'volunteer':
-        return <Badge variant="default" className="bg-purple-600">تطوع</Badge>;
-      case 'internship':
-        return <Badge variant="default" className="bg-pink-600">تدريب</Badge>;
-      case 'remote':
-        return <Badge variant="default" className="bg-indigo-600">عن بعد</Badge>;
-      default:
-        return <Badge variant="outline">غير محدد</Badge>;
-    }
+
+  // Get days remaining until deadline
+  const getDaysRemaining = (deadline?: string) => {
+    if (!deadline) return null;
+    
+    const today = new Date();
+    const deadlineDate = new Date(deadline);
+    const diffTime = deadlineDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
   };
-  
+
   return (
-    <div className="container mx-auto py-8 px-4">
-      <h2 className="text-3xl font-bold text-center mb-8 text-primary">فرص العمل والتطوع</h2>
-      
-      <div className="flex flex-col md:flex-row gap-4 mb-8">
-        <form onSubmit={handleSearch} className="flex-1 flex gap-2">
-          <Input 
-            placeholder="ابحث عن وظيفة..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="flex-1"
-            disabled={isLoading}
-          />
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? (
-              <div className="h-4 w-4 rounded-full border-2 border-current border-r-transparent animate-spin mr-2"></div>
-            ) : (
-              <Search className="h-4 w-4 mr-2" />
-            )}
-            بحث
-          </Button>
-        </form>
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-right">فرص العمل</h2>
+          <p className="text-gray-500 text-right mt-1">
+            استعرض الوظائف المتاحة في المؤسسات والمنظمات الإسلامية
+          </p>
+        </div>
         
-        <div className="flex items-center space-x-2 rtl:space-x-reverse">
-          <Filter className="h-4 w-4" />
-          <Label>تصفية:</Label>
-          <select 
-            className="border rounded p-2"
-            value={filter}
-            onChange={(e) => handleFilterChange(e.target.value)}
-            disabled={isLoading}
-          >
-            <option value="all">جميع الوظائف</option>
-            <option value="remote">عمل عن بعد</option>
-            <option value="full-time">دوام كامل</option>
-            <option value="part-time">دوام جزئي</option>
-            <option value="contract">عقد</option>
-            <option value="volunteer">تطوع</option>
-            <option value="teaching">تدريس</option>
-            <option value="research">بحث</option>
-            <option value="tech">تقنية</option>
-            <option value="admin">إدارة</option>
-          </select>
-        </div>
+        <form onSubmit={handleSearchSubmit} className="flex w-full md:w-auto">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <Input
+              type="search"
+              placeholder="ابحث عن وظيفة..."
+              className="pl-8 text-right w-full"
+              value={searchQuery}
+              onChange={handleSearchChange}
+            />
+          </div>
+          <Button type="submit" className="mr-2">بحث</Button>
+        </form>
       </div>
-      
-      {isLoading && jobs.length === 0 ? (
-        <div className="text-center py-20">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="mt-4 text-lg text-muted-foreground">جارِ تحميل فرص العمل...</p>
+
+      <Tabs defaultValue="all" onValueChange={handleFilterChange}>
+        <TabsList className="grid grid-cols-3 md:grid-cols-7 h-auto">
+          <TabsTrigger value="all">{getCategoryLabel('all')}</TabsTrigger>
+          <TabsTrigger value="teaching">{getCategoryLabel('teaching')}</TabsTrigger>
+          <TabsTrigger value="research">{getCategoryLabel('research')}</TabsTrigger>
+          <TabsTrigger value="tech">{getCategoryLabel('tech')}</TabsTrigger>
+          <TabsTrigger value="admin">{getCategoryLabel('admin')}</TabsTrigger>
+          <TabsTrigger value="community">{getCategoryLabel('community')}</TabsTrigger>
+          <TabsTrigger value="other">{getCategoryLabel('other')}</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {/* Error alert */}
+      {error && (
+        <div className="bg-red-50 text-red-800 p-4 rounded-md mb-4 text-right">
+          <p className="font-semibold">خطأ:</p>
+          <p>{error}</p>
         </div>
-      ) : (
-        <Tabs defaultValue="all" onValueChange={handleFilterChange} className="w-full">
-          <TabsList className="mb-6 grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
-            <TabsTrigger value="all">الكل</TabsTrigger>
-            <TabsTrigger value="teaching">تعليم</TabsTrigger>
-            <TabsTrigger value="research">بحوث</TabsTrigger>
-            <TabsTrigger value="tech">تقنية</TabsTrigger>
-            <TabsTrigger value="admin">إدارة</TabsTrigger>
-            <TabsTrigger value="remote">عن بعد</TabsTrigger>
-            <TabsTrigger value="volunteer">تطوع</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="all" className="space-y-6">
-            {getFilteredJobs().length === 0 ? (
-              <div className="text-center py-12 border rounded-lg">
-                <div className="w-12 h-12 mx-auto bg-muted rounded-full flex items-center justify-center mb-4">
-                  <Briefcase className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <p className="text-muted-foreground">
-                  لا توجد وظائف متاحة تطابق معايير البحث
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {getFilteredJobs().map(job => (
-                  <Card key={job.id} className="overflow-hidden transition-all hover:shadow-md">
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-lg">{job.title}</CardTitle>
-                          <CardDescription>{job.organization}</CardDescription>
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                          {getTypeBadge(job.type)}
-                          {job.isRemote && <Badge variant="outline">عن بعد</Badge>}
-                        </div>
-                      </div>
-                    </CardHeader>
-                    
-                    <CardContent className="text-sm">
-                      <div className="flex items-center justify-end mb-2 text-muted-foreground space-x-4 rtl:space-x-reverse">
-                        <div className="flex items-center">
-                          <MapPin className="h-3 w-3 ml-1" />
-                          <span>{job.location}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Clock className="h-3 w-3 ml-1" />
-                          <span>آخر موعد: {formatDate(job.applicationDeadline)}</span>
-                        </div>
-                      </div>
-                      
-                      <p className="text-right line-clamp-3 mb-4 h-16">
-                        {job.description}
-                      </p>
-                      
-                      <div className="flex justify-between items-center pt-2">
-                        <Dialog onOpenChange={(open) => {
-                          if (open) setSelectedJobId(job.id);
-                        }}>
-                          <DialogTrigger asChild>
-                            <Button variant="default" size="sm">
-                              <Send className="mr-1 h-3 w-3" />
-                              تقديم طلب
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="sm:max-w-[600px]">
-                            <DialogHeader>
-                              <DialogTitle className="text-right">
-                                التقديم على وظيفة: {job.title}
-                              </DialogTitle>
-                              <DialogDescription className="text-right">
-                                قم بتعبئة النموذج أدناه للتقديم على هذه الوظيفة في {job.organization}
-                              </DialogDescription>
-                            </DialogHeader>
-                            <form onSubmit={handleSubmitApplication} className="space-y-4">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                  <Label htmlFor="name" className="text-right block">الاسم الكامل</Label>
-                                  <Input
-                                    id="name"
-                                    name="name"
-                                    value={applicationData.name}
-                                    onChange={handleApplicationChange}
-                                    required
-                                    className="text-right"
-                                    disabled={isLoading}
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label htmlFor="email" className="text-right block">البريد الإلكتروني</Label>
-                                  <Input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    value={applicationData.email}
-                                    onChange={handleApplicationChange}
-                                    required
-                                    className="text-right"
-                                    disabled={isLoading}
-                                  />
-                                </div>
-                              </div>
-                              
-                              <div className="space-y-2">
-                                <Label htmlFor="phone" className="text-right block">رقم الهاتف</Label>
-                                <Input
-                                  id="phone"
-                                  name="phone"
-                                  value={applicationData.phone}
-                                  onChange={handleApplicationChange}
-                                  className="text-right"
-                                  disabled={isLoading}
-                                />
-                              </div>
-                              
-                              <div className="space-y-2">
-                                <Label htmlFor="resumeUrl" className="text-right block">رابط السيرة الذاتية</Label>
-                                <Input
-                                  id="resumeUrl"
-                                  name="resumeUrl"
-                                  placeholder="https://drive.google.com/..."
-                                  value={applicationData.resumeUrl}
-                                  onChange={handleApplicationChange}
-                                  className="text-right"
-                                  disabled={isLoading}
-                                />
-                                <p className="text-xs text-muted-foreground text-right">
-                                  يمكنك تقديم رابط لسيرتك الذاتية على Google Drive أو Dropbox أو OneDrive
-                                </p>
-                              </div>
-                              
-                              <div className="space-y-2">
-                                <Label htmlFor="coverLetter" className="text-right block">رسالة تقديم</Label>
-                                <textarea
-                                  id="coverLetter"
-                                  name="coverLetter"
-                                  rows={5}
-                                  value={applicationData.coverLetter}
-                                  onChange={handleApplicationChange}
-                                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background text-right"
-                                  required
-                                  disabled={isLoading}
-                                ></textarea>
-                              </div>
-                              
-                              <DialogFooter>
-                                <Button type="submit" disabled={isLoading}>
-                                  {isLoading ? (
-                                    <div className="h-4 w-4 rounded-full border-2 border-current border-r-transparent animate-spin mr-2"></div>
-                                  ) : 'إرسال الطلب'}
-                                </Button>
-                              </DialogFooter>
-                            </form>
-                          </DialogContent>
-                        </Dialog>
-                        
-                        <Button variant="outline" size="sm">
-                          <ExternalLink className="mr-1 h-3 w-3" />
-                          عرض التفاصيل
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-          
-          {/* Other tab contents will filter automatically by the handleFilterChange function */}
-          <TabsContent value="teaching" className="space-y-6">
-            {/* Using same structure as "all" tab but filtered by category */}
-          </TabsContent>
-          <TabsContent value="research" className="space-y-6">
-            {/* Using same structure as "all" tab but filtered by category */}
-          </TabsContent>
-          <TabsContent value="tech" className="space-y-6">
-            {/* Using same structure as "all" tab but filtered by category */}
-          </TabsContent>
-          <TabsContent value="admin" className="space-y-6">
-            {/* Using same structure as "all" tab but filtered by category */}
-          </TabsContent>
-          <TabsContent value="remote" className="space-y-6">
-            {/* Using same structure as "all" tab but filtered by category */}
-          </TabsContent>
-          <TabsContent value="volunteer" className="space-y-6">
-            {/* Using same structure as "all" tab but filtered by category */}
-          </TabsContent>
-        </Tabs>
       )}
       
-      <div className="text-center mt-8 border-t pt-6">
-        <p className="text-sm text-muted-foreground">
-          هل لديك فرصة عمل تريد الإعلان عنها؟{' '}
-          <a href="/contact" className="text-primary font-medium hover:underline">
-            تواصل معنا
-          </a>
-        </p>
-      </div>
+      {/* Loading state */}
+      {isLoading ? (
+        <div className="flex justify-center items-center p-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-800"></div>
+        </div>
+      ) : (
+        /* Job listings */
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {jobs.length === 0 ? (
+            <div className="col-span-full text-center py-12 bg-gray-50 rounded-lg">
+              <Briefcase className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium mb-2">لا توجد وظائف متاحة حالياً</h3>
+              <p className="text-gray-500">
+                لم نجد أي وظائف تطابق معايير البحث. يرجى المحاولة مرة أخرى لاحقاً.
+              </p>
+            </div>
+          ) : (
+            jobs.map((job) => (
+              <Card key={job.id} className="overflow-hidden">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-shrink-0">
+                      {renderCategoryBadge(job.category)}
+                    </div>
+                    <div className="text-right">
+                      <CardTitle className="text-xl">{job.title}</CardTitle>
+                      <CardDescription>{job.organization}</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="text-right">
+                  <div className="space-y-4">
+                    <div className="flex justify-end items-center text-gray-500 space-x-4 space-x-reverse">
+                      <div className="flex items-center">
+                        <span>{job.location}</span>
+                        <MapPin className="mr-1 h-4 w-4" />
+                      </div>
+                      {job.isRemote && (
+                        <Badge variant="outline" className="mr-2">عن بعد</Badge>
+                      )}
+                    </div>
+                    
+                    <p className="line-clamp-3 text-gray-700">
+                      {job.description}
+                    </p>
+                    
+                    <div className="flex flex-wrap justify-end gap-2 text-xs">
+                      {job.requirements.slice(0, 3).map((req, index) => (
+                        <Badge key={index} variant="secondary">{req}</Badge>
+                      ))}
+                      {job.requirements.length > 3 && (
+                        <Badge variant="secondary">+{job.requirements.length - 3}</Badge>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+                <Separator />
+                <CardFooter className="pt-4 flex justify-between">
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button 
+                        onClick={() => setSelectedJobId(job.id)}
+                        className="bg-sabeel-primary hover:bg-sabeel-primary/90"
+                      >
+                        التقديم للوظيفة
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle className="text-right">
+                          التقديم لوظيفة: {job.title}
+                        </DialogTitle>
+                        <DialogDescription className="text-right">
+                          أكمل النموذج التالي للتقدم لهذه الوظيفة
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="name" className="text-right block">الاسم *</Label>
+                          <Input
+                            id="name"
+                            name="name"
+                            placeholder="الاسم الكامل"
+                            className="text-right"
+                            value={applicationData.name}
+                            onChange={handleApplicationChange}
+                            required
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="email" className="text-right block">البريد الإلكتروني *</Label>
+                          <Input
+                            id="email"
+                            name="email"
+                            type="email"
+                            placeholder="example@domain.com"
+                            className="text-right"
+                            value={applicationData.email}
+                            onChange={handleApplicationChange}
+                            required
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="phone" className="text-right block">رقم الهاتف</Label>
+                          <Input
+                            id="phone"
+                            name="phone"
+                            placeholder="رقم الهاتف"
+                            className="text-right"
+                            value={applicationData.phone}
+                            onChange={handleApplicationChange}
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="coverletter" className="text-right block">رسالة تقديم</Label>
+                          <textarea
+                            id="coverletter"
+                            name="coverletter"
+                            placeholder="اكتب نبذة عن نفسك وسبب اهتمامك بهذه الوظيفة"
+                            className="w-full min-h-[100px] p-2 border border-gray-300 rounded-md text-right"
+                            value={applicationData.coverletter}
+                            onChange={handleApplicationChange}
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="resume" className="text-right block">السيرة الذاتية</Label>
+                          <Input
+                            id="resume"
+                            name="resume"
+                            type="file"
+                            className="text-right"
+                            onChange={handleFileChange}
+                            accept=".pdf,.doc,.docx"
+                          />
+                          <p className="text-xs text-gray-500 text-right">
+                            يمكنك إرفاق ملف PDF أو Word
+                          </p>
+                        </div>
+                        
+                        {submitResult && (
+                          <div className={`p-3 rounded-md text-right ${
+                            submitResult.success
+                              ? 'bg-green-50 text-green-800'
+                              : 'bg-red-50 text-red-800'
+                          }`}>
+                            {submitResult.message}
+                          </div>
+                        )}
+                      </div>
+                      <DialogFooter className="flex justify-between">
+                        <Button
+                          type="submit"
+                          disabled={isSubmitting}
+                          onClick={handleSubmitApplication}
+                        >
+                          {isSubmitting ? (
+                            <>
+                              <div className="animate-spin mr-2 h-4 w-4 border-2 border-b-transparent rounded-full"></div>
+                              جاري الإرسال...
+                            </>
+                          ) : (
+                            <>
+                              <Send className="mr-2 h-4 w-4" />
+                              إرسال الطلب
+                            </>
+                          )}
+                        </Button>
+                        
+                        <Button variant="outline" onClick={() => {
+                          setSelectedJobId(null);
+                          setSubmitResult(null);
+                        }}>
+                          إلغاء
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                  
+                  <div className="text-xs text-gray-500 text-right">
+                    <div>تاريخ النشر: {formatDate(job.postedDate)}</div>
+                    {job.applicationDeadline && (
+                      <div className="flex items-center">
+                        <Clock className="ml-1 h-3 w-3" />
+                        <span>
+                          {getDaysRemaining(job.applicationDeadline)} يوم متبقي
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </CardFooter>
+              </Card>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 };

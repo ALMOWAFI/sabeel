@@ -686,20 +686,11 @@ export class UserPreferencesService {
   /**
    * Apply Qibla direction preferences
    */
-  public applyQiblaPreferences(): void {
-    const qibla = this.preferences?.qibla || DEFAULT_PREFERENCES.qibla;
-    
-    // Apply Qibla direction attributes to document
-    document.documentElement.setAttribute('data-qibla-map-type', qibla.qiblaMapType);
-    document.documentElement.classList.toggle('use-device-sensors', qibla.useDeviceSensors);
-    document.documentElement.classList.toggle('show-qibla-compass', qibla.showCompassView);
-    document.documentElement.classList.toggle('show-qibla-map', qibla.showQiblaMap);
-    
-    // Dispatch an event that Qibla-related components can listen for
-    const event = new CustomEvent('qibla-preferences-changed', { 
-      detail: { preferences: qibla } 
-    });
-    document.dispatchEvent(event);
+  private applyQiblaDirectionLegacy(): void {
+    // This method is kept for backward compatibility
+    // The main implementation is now in applyQiblaPreferences()
+    this.applyQiblaPreferences();
+    // Event dispatch is now handled in the main applyQiblaPreferences method
   }
   
   /**
@@ -869,6 +860,32 @@ export class UserPreferencesService {
       const disableEvent = new CustomEvent('ramadan-mode-disabled');
       document.dispatchEvent(disableEvent);
     }
+  }
+  
+  /**
+   * Apply Qibla preferences
+   */
+  public applyQiblaPreferences(): void {
+    const qibla = this.preferences?.qibla || DEFAULT_PREFERENCES.qibla;
+    
+    // Apply Qibla-specific attributes to document
+    document.documentElement.classList.toggle('use-device-sensors', qibla.useDeviceSensors);
+    document.documentElement.classList.toggle('manual-coordinates', qibla.manualCoordinates);
+    document.documentElement.classList.toggle('show-compass-view', qibla.showCompassView);
+    document.documentElement.classList.toggle('show-qibla-map', qibla.showQiblaMap);
+    document.documentElement.setAttribute('data-qibla-map-type', qibla.qiblaMapType);
+    
+    // If coordinates are available, calculate and set Qibla direction
+    if (qibla.latitude !== null && qibla.longitude !== null) {
+      const qiblaDirection = this.calculateQiblaDirection(qibla.latitude, qibla.longitude);
+      document.documentElement.style.setProperty('--qibla-direction', `${qiblaDirection}deg`);
+    }
+    
+    // Dispatch an event that Qibla-related components can listen for
+    const event = new CustomEvent('qibla-preferences-changed', { 
+      detail: { preferences: qibla } 
+    });
+    document.dispatchEvent(event);
   }
   
   /**

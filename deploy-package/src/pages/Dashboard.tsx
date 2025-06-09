@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { 
   Book, 
   BookOpen, 
@@ -15,7 +16,11 @@ import {
   ChevronRight,
   MessageCircle,
   Search,
-  Database
+  Database,
+  Edit,
+  Briefcase,
+  Phone,
+  AlertCircle
 } from "lucide-react";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -23,6 +28,11 @@ import SabeelChatbot from '@/components/SabeelChatbot';
 import SimpleKnowledgeExplorer from '@/components/SimpleKnowledgeExplorer';
 import IslamicResources from '@/components/IslamicResources';
 import ScholarForum from '@/components/ScholarForum';
+import ContentCreationStudio from '@/components/content-creator/ContentCreationStudio';
+import JobOpeningsBoard from '@/components/community/JobOpeningsBoard';
+import WhatsAppGroupJoin from '@/components/community/WhatsAppGroupJoin';
+import AppwriteConnectionCheck from '@/components/AppwriteConnectionCheck';
+import SupabaseConnectionTest from '@/components/SupabaseConnectionTest';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Dashboard = () => {
@@ -76,6 +86,33 @@ const Dashboard = () => {
                     <PenTool className="ml-2 h-4 w-4" />
                     المشاريع البحثية
                   </Button>
+                  
+                  <Button 
+                    variant={activeTab === "content" ? "default" : "ghost"} 
+                    className="w-full justify-start text-right" 
+                    onClick={() => setActiveTab("content")}
+                  >
+                    <Edit className="ml-2 h-4 w-4" />
+                    إنشاء المحتوى
+                  </Button>
+                  
+                  <Button 
+                    variant={activeTab === "community" ? "default" : "ghost"} 
+                    className="w-full justify-start text-right" 
+                    onClick={() => setActiveTab("community")}
+                  >
+                    <Briefcase className="ml-2 h-4 w-4" />
+                    المجتمع
+                  </Button>
+                  
+                  <Button 
+                    variant={activeTab === "system" ? "default" : "ghost"} 
+                    className="w-full justify-start text-right mt-8 bg-amber-100 hover:bg-amber-200 dark:bg-amber-900 dark:hover:bg-amber-800" 
+                    onClick={() => setActiveTab("system")}
+                  >
+                    <AlertCircle className="ml-2 h-4 w-4" />
+                    حالة النظام
+                  </Button>
                 </nav>
               </CardContent>
             </Card>
@@ -90,6 +127,11 @@ const Dashboard = () => {
               <p className="text-gray-500 dark:text-gray-400 mt-2 text-right">
                 استكشف المعرفة الإسلامية، تواصل مع العلماء، وساهم في المشاريع المعرفية.
               </p>
+            </div>
+            
+            {/* Supabase Connection Test - for debugging */}
+            <div className="mb-6">
+              <SupabaseConnectionTest />
             </div>
             
             {/* Active Tab Content */}
@@ -175,19 +217,141 @@ const Dashboard = () => {
                 <CardHeader>
                   <CardTitle className="text-right">المشاريع البحثية</CardTitle>
                   <CardDescription className="text-right">
-                    تعاون مع الباحثين والعلماء في مشاريع علمية متنوعة
+                    شارك في مشاريع بحثية تعاونية في مجال الدراسات الإسلامية والتقنية
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-12">
-                    <PenTool className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-                    <h3 className="text-xl font-medium mb-2">قريباً...</h3>
-                    <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                      نعمل على تطوير منصة المشاريع البحثية. ترقبوا إطلاقها قريباً.
+                  <div className="space-y-4">
+                    <p className="text-gray-600 dark:text-gray-300 text-right">
+                      قريباً... سيتم إطلاق منصة المشاريع البحثية التعاونية
                     </p>
+                    
+                    <Button disabled className="w-full">
+                      استكشاف المشاريع
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
+            )}
+            
+            {activeTab === "content" && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-right">إنشاء المحتوى الإسلامي</CardTitle>
+                  <CardDescription className="text-right">
+                    أنشئ محتوى إسلامي جديد باستخدام أدوات الذكاء الاصطناعي المتوافقة مع الشريعة
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ContentCreationStudio />
+                </CardContent>
+              </Card>
+            )}
+            
+            {activeTab === "community" && (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-right">فرص العمل</CardTitle>
+                    <CardDescription className="text-right">
+                      استعرض وتقدم لفرص العمل في المؤسسات والمنظمات الإسلامية
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <JobOpeningsBoard />
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-right">مجموعات واتساب</CardTitle>
+                    <CardDescription className="text-right">
+                      انضم إلى مجموعات واتساب المجتمعية للتواصل والتعلم
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <WhatsAppGroupJoin />
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+            
+            {activeTab === "system" && (
+              <div className="space-y-6">
+                <Alert className="bg-amber-50 dark:bg-amber-900 mb-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>System Status Diagnostic</AlertTitle>
+                  <AlertDescription>
+                    This panel helps diagnose connectivity issues with backend services.
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Appwrite Connection</CardTitle>
+                      <CardDescription>
+                        Check connection to Appwrite services
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <AppwriteConnectionCheck />
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Supabase Connection</CardTitle>
+                      <CardDescription>
+                        Check connection to Supabase services
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <SupabaseConnectionTest />
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Project Structure Analysis</CardTitle>
+                    <CardDescription>
+                      Information about how your project is structured
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-medium mb-2">Multiple Frontend Implementations</h3>
+                        <p>This project contains multiple competing frontend implementations:</p>
+                        <ul className="list-disc pl-5 space-y-1 mt-2">
+                          <li>React/Vite app in <code>src/</code> directory (current view)</li>
+                          <li>HTML templates in <code>web_interface/templates/</code></li>
+                          <li>Various integration components in <code>integration/</code></li>
+                        </ul>
+                      </div>
+                      
+                      <div>
+                        <h3 className="text-lg font-medium mb-2">Backend Services</h3>
+                        <p>The project has implementations for multiple backend services:</p>
+                        <ul className="list-disc pl-5 space-y-1 mt-2">
+                          <li>Appwrite (via <code>integration/appwrite/</code>)</li>
+                          <li>Supabase (via <code>src/lib/supabaseConfig.ts</code>)</li>
+                        </ul>
+                      </div>
+                      
+                      <Alert>
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Resolution</AlertTitle>
+                        <AlertDescription>
+                          To fix the integration issues, focus on one backend implementation (Appwrite or Supabase)
+                          and ensure all components use the same service consistently.
+                        </AlertDescription>
+                      </Alert>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             )}
           </div>
         </div>
