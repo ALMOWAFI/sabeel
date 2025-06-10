@@ -2,6 +2,10 @@
  * WhatsAppGroupJoin.tsx
  * 
  * Component for joining WhatsApp community groups related to Islamic knowledge
+ *
+ * TEMPORARY MODIFICATION: Appwrite functionality has been disabled due to missing
+ * AppwriteService.ts and AppwriteAuthBridge.ts.
+ * Needs to be refactored to use the current primary data/auth service.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -15,9 +19,9 @@ import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { MessageSquare, Users, Clock, Globe, Check, AlertCircle } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
-import appwriteService from "@/services/AppwriteService";
-import appwriteAuthBridge from "@/services/AppwriteAuthBridge";
-import { Query, ID } from 'appwrite';
+// import appwriteService from "@/services/AppwriteService"; // AppwriteService is missing
+// import appwriteAuthBridge from "@/services/AppwriteAuthBridge"; // AppwriteAuthBridge is missing
+// import { Query, ID } from 'appwrite'; // Appwrite import removed
 
 interface WhatsAppGroup {
   id: string;
@@ -30,17 +34,22 @@ interface WhatsAppGroup {
   isPublic: boolean;
 }
 
-// This will be loaded from Supabase
+// Mock data as Appwrite is disabled
+const mockGroups: WhatsAppGroup[] = [
+  { id: '1', name: 'تفسير القرآن الكريم', description: 'مجموعة متخصصة في دراسة وتفسير آيات القرآن الكريم وأسباب النزول.', category: 'quran', language: 'arabic', memberCount: 125, inviteLink: '#', isPublic: true },
+  { id: '2', name: 'English Hadith Studies', description: 'Group for studying and discussing authentic Hadith in English.', category: 'knowledge', language: 'english', memberCount: 88, inviteLink: '#', isPublic: true },
+  { id: '3', name: 'دروس الفقه الحنفي', description: 'نقاشات وأسئلة حول الفقه على المذهب الحنفي.', category: 'fiqh', language: 'arabic', memberCount: 210, inviteLink: '#', isPublic: false },
+];
 
 const WhatsAppGroupJoin: React.FC = () => {
   const { toast } = useToast();
-  const [groups, setGroups] = useState<WhatsAppGroup[]>([]);
+  const [groups, setGroups] = useState<WhatsAppGroup[]>(mockGroups); // Using mock data
   const [activeTab, setActiveTab] = useState('all');
   const [filter, setFilter] = useState({
     category: 'all',
     language: 'all'
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Set to false as we use mock data
   const [requestFormOpen, setRequestFormOpen] = useState(false);
   const [requestData, setRequestData] = useState({
     name: '',
@@ -50,108 +59,71 @@ const WhatsAppGroupJoin: React.FC = () => {
     groupId: ''
   });
   
-  // Fetch WhatsApp groups from Appwrite
+  // Fetch WhatsApp groups - Temporarily disabled Appwrite logic
   useEffect(() => {
     async function fetchGroups() {
-      try {
-        setLoading(true);
-        const databases = appwriteService.databases;
-        const databaseId = appwriteService.databaseId;
-        const whatsappGroupsCollection = appwriteService.collections.whatsappGroups;
+      setLoading(true);
+      toast({
+        title: "ميزة مجموعات واتساب قيد الصيانة",
+        description: "يتم عرض بيانات تجريبية حاليًا.",
+        variant: "default"
+      });
+      setGroups(mockGroups); // Using mock data
+      setLoading(false);
+      // try {
+      //   setLoading(true);
+      //   const databases = appwriteService.databases;
+      //   const databaseId = appwriteService.databaseId;
+      //   const whatsappGroupsCollection = appwriteService.collections.whatsappGroups;
         
-        // Fetch WhatsApp groups data
-        const response = await databases.listDocuments(
-          databaseId,
-          whatsappGroupsCollection
-        );
+      //   const response = await databases.listDocuments(
+      //     databaseId,
+      //     whatsappGroupsCollection
+      //   );
         
-        if (response && response.documents) {
-          // Map database documents to component props
-          const mappedGroups = response.documents.map(group => ({
-            id: group.$id,
-            name: group.name,
-            description: group.description,
-            category: group.category as 'knowledge' | 'quran' | 'fiqh' | 'history' | 'community',
-            language: group.language as 'arabic' | 'english' | 'turkish' | 'french' | 'urdu',
-            memberCount: group.member_count,
-            inviteLink: group.invite_link,
-            isPublic: group.is_public
-          }));
-          setGroups(mappedGroups);
-        }
-      } catch (error) {
-        console.error('Error fetching WhatsApp groups:', error);
-        toast({
-          variant: "destructive",
-          title: "خطأ في جلب البيانات",
-          description: "حدث خطأ أثناء تحميل المجموعات. يرجى المحاولة مرة أخرى."
-        });
-      } finally {
-        setLoading(false);
-      }
+      //   if (response && response.documents) {
+      //     const mappedGroups = response.documents.map(group => ({
+      //       id: group.$id,
+      //       name: group.name,
+      //       description: group.description,
+      //       category: group.category as 'knowledge' | 'quran' | 'fiqh' | 'history' | 'community',
+      //       language: group.language as 'arabic' | 'english' | 'turkish' | 'french' | 'urdu',
+      //       memberCount: group.member_count,
+      //       inviteLink: group.invite_link,
+      //       isPublic: group.is_public
+      //     }));
+      //     setGroups(mappedGroups);
+      //   }
+      // } catch (error) {
+      //   console.error('Error fetching WhatsApp groups:', error);
+      //   toast({
+      //     variant: "destructive",
+      //     title: "خطأ في جلب البيانات",
+      //     description: "حدث خطأ أثناء تحميل المجموعات. يرجى المحاولة مرة أخرى."
+      //   });
+      // } finally {
+      //   setLoading(false);
+      // }
     }
     
     fetchGroups();
-  }, [toast]);  // Include toast in dependencies
+  }, [toast]);
   
-  // Handle joining a group
+  // Handle joining a group - Temporarily disabled Appwrite logic
   const handleJoinGroup = async (group: WhatsAppGroup) => {
-    if (group.isPublic && group.inviteLink) {
+    if (group.isPublic && group.inviteLink && group.inviteLink !== '#') {
       window.open(group.inviteLink, '_blank');
-      
-      // Record this activity in Appwrite
-      try {
-        // Get current user from our Appwrite auth bridge
-        const userData = await appwriteAuthBridge.getCurrentUser();
-        
-        if (userData) {
-          const databases = appwriteService.databases;
-          const databaseId = appwriteService.databaseId;
-          const userActivitiesCollection = appwriteService.collections.userActivities;
-          
-          // Log the join action
-          await databases.createDocument(
-            databaseId,
-            userActivitiesCollection,
-            ID.unique(),
-            {
-              user_id: userData.userId,
-              activity_type: 'whatsapp_group_join',
-              details: { group_id: group.id, group_name: group.name }
-            }
-          );
-          
-          // Increment group member count (update the document)
-          // Find the group first
-          const whatsappGroupsCollection = appwriteService.collections.whatsappGroups;
-          const response = await databases.getDocument(
-            databaseId, 
-            whatsappGroupsCollection, 
-            group.id
-          );
-          
-          // Then update the member count
-          if (response) {
-            await databases.updateDocument(
-              databaseId,
-              whatsappGroupsCollection,
-              group.id,
-              {
-                member_count: (response.member_count || 0) + 1
-              }
-            );
-          }
-        }
-      } catch (error) {
-        console.error('Error logging group join:', error);
-      }
-      
       toast({
         title: "تم فتح رابط المجموعة",
         description: `انتقل إلى تطبيق واتساب للانضمام إلى "${group.name}"`
       });
+    } else if (group.inviteLink === '#') {
+         toast({
+            variant: "default",
+            title: "ميزة تجريبية",
+            description: "رابط الانضمام غير متوفر حاليًا لهذه المجموعة التجريبية."
+        });
     } else {
-      // Open request form for private groups
       setRequestData(prev => ({ ...prev, groupId: group.id }));
       setRequestFormOpen(true);
     }
@@ -163,72 +135,70 @@ const WhatsAppGroupJoin: React.FC = () => {
     setRequestData(prev => ({ ...prev, [name]: value }));
   };
   
-  // Submit join request
+  // Submit join request - Temporarily disabled Appwrite logic
   const handleSubmitRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    try {
-      // Get current user from Appwrite auth bridge
-      const userData = await appwriteAuthBridge.getCurrentUser();
+    toast({
+        variant: "default",
+        title: "ميزة طلب الانضمام معطلة مؤقتًا",
+        description: "لا يمكن إرسال طلبات الانضمام حاليًا. يرجى المحاولة لاحقًا."
+    });
+
+    // try {
+    //   const userData = await appwriteAuthBridge.getCurrentUser();
       
-      if (!userData) {
-        toast({
-          variant: "destructive",
-          title: "يرجى تسجيل الدخول",
-          description: "يجب تسجيل الدخول لإرسال طلب الانضمام"
-        });
-        return;
-      }
+    //   if (!userData) {
+    //     toast({
+    //       variant: "destructive",
+    //       title: "يرجى تسجيل الدخول",
+    //       description: "يجب تسجيل الدخول لإرسال طلب الانضمام"
+    //     });
+    //     return;
+    //   }
       
-      // Insert the join request in user_activities collection using Appwrite
-      const databases = appwriteService.databases;
-      const databaseId = appwriteService.databaseId;
-      const userActivitiesCollection = appwriteService.collections.userActivities;
+    //   const databases = appwriteService.databases;
+    //   const databaseId = appwriteService.databaseId;
+    //   const userActivitiesCollection = appwriteService.collections.userActivities;
       
-      await databases.createDocument(
-        databaseId,
-        userActivitiesCollection,
-        ID.unique(),
-        {
-          user_id: userData.userId,
-          activity_type: 'whatsapp_group_join_request',
-          details: {
-            group_id: requestData.groupId,
-            name: requestData.name,
-            phone: requestData.phone,
-            reason: requestData.reason
-          }
-        }
-      );
+    //   await databases.createDocument(
+    //     databaseId,
+    //     userActivitiesCollection,
+    //     ID.unique(),
+    //     {
+    //       user_id: userData.userId,
+    //       activity_type: 'whatsapp_group_join_request',
+    //       details: {
+    //         group_id: requestData.groupId,
+    //         name: requestData.name,
+    //         phone: requestData.phone,
+    //         reason: requestData.reason
+    //       }
+    //     }
+    //   );
       
-      toast({
-        title: "تم إرسال الطلب",
-        description: "تم إرسال طلبك للانضمام إلى المجموعة وسيتم مراجعته قريبًا",
-      });
+    //   toast({
+    //     title: "تم إرسال الطلب",
+    //     description: "تم إرسال طلبك للانضمام إلى المجموعة وسيتم مراجعته قريبًا",
+    //   });
       
-      // Close form and reset data
-      setRequestFormOpen(false);
-      setRequestData({
-        name: '',
-        email: '',
-        phone: '',
-        reason: '',
-        groupId: ''
-      });
-    } catch (error) {
-      console.error('Error submitting request:', error);
-      toast({
-        variant: "destructive",
-        title: "خطأ في إرسال الطلب",
-        description: "حدث خطأ أثناء إرسال طلبك. يرجى المحاولة مرة أخرى لاحقًا."
-      });
-    } finally {
-      setLoading(false);
-    }
+    //   setRequestFormOpen(false);
+    //   setRequestData({ name: '', email: '', phone: '', reason: '', groupId: '' });
+    // } catch (error) {
+    //   console.error('Error submitting request:', error);
+    //   toast({
+    //     variant: "destructive",
+    //     title: "خطأ في إرسال الطلب",
+    //     description: "حدث خطأ أثناء إرسال طلبك. يرجى المحاولة مرة أخرى لاحقًا."
+    //   });
+    // } finally {
+    //   setLoading(false);
+    // }
+    setLoading(false);
+    setRequestFormOpen(false);
   };
   
-  // Filter groups based on category and language
   const getFilteredGroups = () => {
     return groups.filter(group => 
       (filter.category === 'all' || group.category === filter.category) &&
@@ -236,12 +206,10 @@ const WhatsAppGroupJoin: React.FC = () => {
     );
   };
   
-  // Get group for the current request
   const getRequestedGroup = () => {
     return groups.find(group => group.id === requestData.groupId);
   };
   
-  // Language display map
   const languageDisplay: Record<string, string> = {
     'arabic': 'العربية',
     'english': 'الإنجليزية',
@@ -251,7 +219,6 @@ const WhatsAppGroupJoin: React.FC = () => {
     'all': 'الكل'
   };
   
-  // Category display map
   const categoryDisplay: Record<string, string> = {
     'knowledge': 'المعرفة العامة',
     'quran': 'القرآن والتفسير',
@@ -437,7 +404,7 @@ const WhatsAppGroupJoin: React.FC = () => {
                   </div>
                   
                   <div className="flex justify-end">
-                    <Button>
+                    <Button onClick={() => toast({ title: "ميزة معطلة مؤقتًا", description: "إنشاء المجموعات غير متوفر حاليًا."})}>
                       <Check className="mr-2 h-4 w-4" />
                       إرسال للمراجعة
                     </Button>

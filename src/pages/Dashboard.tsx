@@ -31,7 +31,7 @@ import ScholarForum from '@/components/ScholarForum';
 import ContentCreationStudio from '@/components/content-creator/ContentCreationStudio';
 import JobOpeningsBoard from '@/components/community/JobOpeningsBoard';
 import WhatsAppGroupJoin from '@/components/community/WhatsAppGroupJoin';
-import AppwriteConnectionCheck from '@/components/AppwriteConnectionCheck';
+// import AppwriteConnectionCheck from '@/components/AppwriteConnectionCheck'; // Component file seems to be missing
 import SupabaseConnectionTest from '@/components/SupabaseConnectionTest';
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -287,6 +287,8 @@ const Dashboard = () => {
                 </Alert>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Card for AppwriteConnectionCheck removed as the component file is missing */}
+                  {/*
                   <Card>
                     <CardHeader>
                       <CardTitle>Appwrite Connection</CardTitle>
@@ -298,6 +300,7 @@ const Dashboard = () => {
                       <AppwriteConnectionCheck />
                     </CardContent>
                   </Card>
+                  */}
                   
                   <Card>
                     <CardHeader>

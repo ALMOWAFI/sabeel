@@ -328,7 +328,7 @@ class OfflineContentService {
       const reader = response.body?.getReader();
       const contentLength = Number(response.headers.get('Content-Length')) || 0;
       let receivedLength = 0;
-      let chunks: Uint8Array[] = [];
+      const chunks: Uint8Array[] = [];
       
       if (!reader) throw new Error('Failed to get response reader');
       

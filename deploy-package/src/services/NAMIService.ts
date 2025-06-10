@@ -174,7 +174,7 @@ export class NAMIService {
     // Fiqh-specific guidelines
     this.islamicGuidelines.set('fiqh', [
       'Acknowledge different opinions across madhabs when relevant',
-      'Clarify which madhab or scholar's opinion is being presented',
+      'Clarify which madhab or scholar\'s opinion is being presented',
       'Avoid presenting one fiqh opinion as the only valid view',
       'Note the reasoning (dalil) behind fiqh positions when possible',
       'Distinguish between obligatory, recommended, and permissible acts'
@@ -266,7 +266,7 @@ export class NAMIService {
     }
     
     // Check for content that contains direct quotes
-    if (content.includes('"') || content.includes(''') || content.includes('﴿')) {
+    if (content.includes('"') || content.includes('\'') || content.includes('﴿')) { // Correctly escaped single quote
       return VerificationLevel.SCHOLAR_LIGHT;
     }
     

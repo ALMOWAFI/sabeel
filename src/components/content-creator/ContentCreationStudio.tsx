@@ -355,21 +355,16 @@ const ContentCreationStudio: React.FC = () => {
                             آخر تحديث: {draft.lastUpdated}
                           </span>
                         </p>
-                        <p className="text-sm mt-2">{draft.excerpt}</p>
-                        <div className="mt-2">
+                        <p className="text-sm mt-2 line-clamp-2">{draft.excerpt}</p>
+                        <div className="mt-2 flex items-center">
                           <span className={`px-2 py-1 text-xs font-semibold rounded-full ${draft.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                             {draft.status === 'published' ? 'منشور' : 'مسودة'}
                           </span>
-                                  {contentTypes.find(t => t.value === draft.contentType)?.label}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
+                          {/* Type label is part of the icon span above now */}
                         </div>
-                        
-                        <p className="mt-2 text-sm text-right line-clamp-2">{draft.excerpt}</p>
-                        
-                        <div className="mt-4 flex flex-wrap gap-1 justify-end">
+                      </div>
+                      <div className="flex flex-col items-end space-y-2 flex-shrink-0 mt-4 sm:mt-0">
+                        <div className="flex flex-wrap gap-1 justify-end">
                           {draft.tags.map((tag, index) => (
                             <span
                               key={index}
@@ -379,18 +374,17 @@ const ContentCreationStudio: React.FC = () => {
                             </span>
                           ))}
                         </div>
-                        
-                        <div className="mt-4 flex justify-end space-x-2 space-x-reverse">
-                          <Button variant="outline" size="sm">
+                        <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2 sm:space-x-reverse pt-2">
+                          <Button variant="outline" size="sm" className="w-full sm:w-auto">
                             <Eye className="mr-2 h-4 w-4" />
                             معاينة
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" className="w-full sm:w-auto">
                             <FileText className="mr-2 h-4 w-4" />
                             تعديل
                           </Button>
                           {draft.status === 'draft' && (
-                            <Button size="sm">
+                            <Button size="sm" className="w-full sm:w-auto">
                               <Upload className="mr-2 h-4 w-4" />
                               إرسال للمراجعة
                             </Button>
@@ -398,22 +392,22 @@ const ContentCreationStudio: React.FC = () => {
                         </div>
                       </div>
                     </Card>
-                  ))}
-                </div>
-              )}
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-      
-      <CardFooter className="flex justify-center border-t p-4">
-        <div className="flex items-start space-x-2">
-          <Info className="h-4 w-4 mt-0.5 text-blue-500" />
-          <p className="text-sm text-muted-foreground">
-            نشجع على الالتزام بمعايير الجودة والأمانة العلمية. سيتم مراجعة المحتوى للتأكد من دقته وجودته قبل النشر.
-          </p>
-        </div>
-      </CardFooter>
-    </Card>
+                  ))
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+        <CardFooter className="flex justify-center border-t p-4">
+          <div className="flex items-start space-x-2">
+            <Info className="h-4 w-4 mt-0.5 text-blue-500" />
+            <p className="text-sm text-muted-foreground">
+              نشجع على الالتزام بمعايير الجودة والأمانة العلمية. سيتم مراجعة المحتوى للتأكد من دقته وجودته قبل النشر.
+            </p>
+          </div>
+        </CardFooter>
+      </Card>
+    </div>
   );
 };
 

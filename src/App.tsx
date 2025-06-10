@@ -35,7 +35,7 @@ import UIKit from "./pages/UIKit";
 import ComponentShowcase from "./pages/ComponentShowcase";
 import IntegratedDashboard from "./pages/IntegratedDashboard";
 import AIEnhancedKnowledgeExplorer from "./components/AIEnhancedKnowledgeExplorer";
-import SupabaseUserProfile from "./components/SupabaseUserProfile";
+import SabeelUserProfile from "./components/profile/SabeelUserProfile"; // Updated import path and name
 import IntegratedIslamicKnowledgeSystem from "./components/enhanced/IntegratedIslamicKnowledgeSystem";
 
 // System context provider
@@ -224,7 +224,7 @@ const App = () => {
               
               {/* AI Integration Routes */}
               <Route path="/ai-knowledge-explorer" element={<AIEnhancedKnowledgeExplorer />} />
-              <Route path="/profile" element={<SupabaseUserProfile />} />
+              <Route path="/profile" element={<SabeelUserProfile />} /> {/* Updated component name */}
               <Route path="/islamic-ai-verifier" element={<IslamicAIVerifier />} />
               <Route path="/messiri-llm" element={<MessiriLLM />} />
               <Route path="/integrated-islamic-knowledge" element={<IntegratedIslamicKnowledgeSystem />} />

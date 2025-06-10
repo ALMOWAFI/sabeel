@@ -31,6 +31,11 @@ from transformers import (
     HfArgumentParser,
     DataCollatorForLanguageModeling
 )
+try:
+    from transformers import BitsAndBytesConfig
+except ImportError:
+    BitsAndBytesConfig = None # Fallback if bitsandbytes is not installed or transformers version is old
+
 from peft import (
     LoraConfig,
     get_peft_model,
@@ -38,7 +43,7 @@ from peft import (
     TaskType
 )
 from datasets import load_dataset
-import bitsandbytes as bnb
+# import bitsandbytes as bnb # bitsandbytes was commented out as it's large and causing space issues
 import wandb
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -260,13 +265,20 @@ def load_tokenizer_and_model(model_args):
     if model_args.use_8bit:
         load_kwargs["load_in_8bit"] = True
     elif model_args.use_4bit:
-        load_kwargs["load_in_4bit"] = True
-        load_kwargs["quantization_config"] = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_compute_dtype=torch.float16,
-            bnb_4bit_use_double_quant=True,
-            bnb_4bit_quant_type="nf4"
-        )
+        if BitsAndBytesConfig:
+            logger.info("Applying 4-bit quantization using BitsAndBytesConfig.")
+            load_kwargs["load_in_4bit"] = True
+            load_kwargs["quantization_config"] = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.float16,
+                bnb_4bit_use_double_quant=True,
+                bnb_4bit_quant_type="nf4"
+            )
+        else:
+            logger.warning(
+                "BitsAndBytesConfig is not available (bitsandbytes library might be missing or not fully installed). "
+                "Proceeding without 4-bit quantization. Model performance may be affected or training might fail if 4-bit is strictly required."
+            )
     
     logger.info(f"Loading model from {model_args.model_name_or_path}")
     model = AutoModelForCausalLM.from_pretrained(
@@ -276,7 +288,10 @@ def load_tokenizer_and_model(model_args):
     
     # Prepare model for k-bit training if using quantization
     if model_args.use_8bit or model_args.use_4bit:
-        model = prepare_model_for_kbit_training(model)
+        # Only call if BitsAndBytesConfig was available and used for 4-bit, or if 8-bit is selected
+        if (model_args.use_4bit and BitsAndBytesConfig and 'quantization_config' in load_kwargs) or \
+           model_args.use_8bit:
+            model = prepare_model_for_kbit_training(model)
     
     # Set up default target modules if not specified
     default_target_modules = {

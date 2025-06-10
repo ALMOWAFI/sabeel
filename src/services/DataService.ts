@@ -5,12 +5,15 @@
  * access to backend services regardless of the underlying provider
  * (Appwrite or Supabase). This service is designed to be robust,
  * type-safe, and easily extensible.
+ *
+ * TEMPORARY MODIFICATION: Appwrite fallback logic has been removed due to
+ * missing AppwriteService.ts. This service will currently only support Supabase.
  */
 
 import { User } from '@/types/user';
-import { ID, Query } from 'appwrite';
+// import { ID, Query } from 'appwrite'; // Appwrite import removed
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import appwriteService from './AppwriteService';
+// import appwriteService from './AppwriteService'; // AppwriteService import removed
 import { Collections, CollectionMapping } from '@/types/collections';
 
 // Environment variables for Supabase
@@ -39,28 +42,28 @@ export interface DataServiceInterface {
   deleteFile(bucketId: string, fileId: string): Promise<void>;
   
   // Provider management
-  getProviderName(): 'appwrite' | 'supabase';
-  setProvider(provider: 'appwrite' | 'supabase'): void;
+  getProviderName(): 'supabase'; // Only Supabase for now
+  // setProvider(provider: 'appwrite' | 'supabase'): void; // SetProvider removed for now
 }
 
 /**
- * Unified implementation of the DataService with Supabase as the primary backend,
- * falling back to Appwrite when Supabase is not available or configured.
+ * Unified implementation of the DataService with Supabase as the primary backend.
+ * Appwrite fallback has been temporarily removed.
  */
 export class DataService implements DataServiceInterface {
   private static instance: DataService;
   private supabase: SupabaseClient;
-  private activeProvider: 'appwrite' | 'supabase' = 'supabase';
+  private activeProvider: 'supabase' = 'supabase'; // Defaulting to Supabase
   
   private constructor() {
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.warn('Supabase credentials are not provided. Falling back to Appwrite.');
-      this.activeProvider = 'appwrite';
-      this.supabase = {} as SupabaseClient; // Dummy client to satisfy type
-    } else {
-      this.supabase = createClient(supabaseUrl, supabaseAnonKey);
-      this.detectProvider();
+      console.error('Supabase credentials are not provided. DataService will not function.');
+      // Throw an error or handle this case more gracefully depending on requirements
+      this.supabase = {} as SupabaseClient; // Dummy client to satisfy type, but it won't work
+      return;
     }
+    this.supabase = createClient(supabaseUrl, supabaseAnonKey);
+    console.log('DataService is using Supabase provider.');
   }
   
   public static getInstance(): DataService {
@@ -70,103 +73,61 @@ export class DataService implements DataServiceInterface {
     return DataService.instance;
   }
   
-  private async detectProvider(): Promise<void> {
-    try {
-      const { error } = await this.supabase.from('profiles').select('id').limit(1);
-      if (error && error.code !== '42P01') { // '42P01' = undefined_table
-        throw new Error(`Supabase health check failed: ${error.message}`);
-      }
-      this.activeProvider = 'supabase';
-      console.log('DataService is using Supabase provider.');
-    } catch (e: any) {
-      console.warn(`Supabase is not reachable: ${e.message}. Falling back to Appwrite.`);
-      this.activeProvider = 'appwrite';
-    }
-  }
-  
-  public getProviderName(): 'appwrite' | 'supabase' {
+  public getProviderName(): 'supabase' {
     return this.activeProvider;
   }
   
-  public setProvider(provider: 'appwrite' | 'supabase'): void {
-    if (provider === 'supabase' && (!supabaseUrl || !supabaseAnonKey)) {
-        console.error('Cannot switch to Supabase: credentials are not configured.');
-        return;
-    }
-    this.activeProvider = provider;
-  }
+  // setProvider method removed as we are hardcoding to Supabase for now
 
   // --- Authentication --- 
 
   public async getCurrentUser(): Promise<User | null> {
-    if (this.activeProvider === 'supabase') {
-      const { data: { session } } = await this.supabase.auth.getSession();
-      if (!session) return null;
-
-      const { data: profile } = await this.supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
-      
-      return {
-        userId: session.user.id,
-        email: session.user.email || '',
-        name: profile?.name || session.user.email?.split('@')[0] || 'Anonymous',
-        memberType: profile?.member_type || 'regular',
-        role: profile?.role || 'member',
-        createdAt: profile?.created_at || session.user.created_at,
-      };
-    } else {
-      try {
-        const user = await appwriteService.account.get();
-        const prefs = await appwriteService.account.getPrefs();
-        return {
-          userId: user.$id,
-          email: user.email,
-          name: prefs.name || user.name,
-          memberType: prefs.memberType || 'regular',
-          role: prefs.role || 'member',
-          createdAt: user.$createdAt,
-        };
-      } catch {
+    if (!this.supabase?.auth) {
+        console.error("Supabase client not initialized in getCurrentUser.");
         return null;
-      }
     }
+    const { data: { session } } = await this.supabase.auth.getSession();
+    if (!session) return null;
+
+    const { data: profile } = await this.supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .single();
+
+    return {
+      userId: session.user.id,
+      email: session.user.email || '',
+      name: profile?.name || session.user.email?.split('@')[0] || 'Anonymous',
+      memberType: profile?.member_type || 'regular',
+      role: profile?.role || 'member',
+      createdAt: profile?.created_at || session.user.created_at,
+    };
   }
 
   public async login(email: string, password: string): Promise<User | null> {
-    if (this.activeProvider === 'supabase') {
-        const { data, error } = await this.supabase.auth.signInWithPassword({ email, password });
-        if (error || !data.user) throw new Error(error?.message || 'Login failed');
-        return this.getCurrentUser();
-    } else {
-        await appwriteService.account.createEmailSession(email, password);
-        return this.getCurrentUser();
-    }
+    if (!this.supabase?.auth) throw new Error("Supabase client not initialized.");
+    const { data, error } = await this.supabase.auth.signInWithPassword({ email, password });
+    if (error || !data.user) throw new Error(error?.message || 'Login failed');
+    return this.getCurrentUser();
   }
 
   public async register(email: string, password: string, name: string): Promise<User | null> {
-    if (this.activeProvider === 'supabase') {
-        const { data, error } = await this.supabase.auth.signUp({
-            email, password, options: { data: { name, member_type: 'regular', role: 'member' } }
-        });
-        if (error || !data.user) throw new Error(error?.message || 'Registration failed');
-        return this.getCurrentUser();
-    } else {
-        await appwriteService.account.create(ID.unique(), email, password, name);
-        await appwriteService.account.updatePrefs({ name, memberType: 'regular', role: 'member' });
-        return this.login(email, password);
-    }
+    if (!this.supabase?.auth) throw new Error("Supabase client not initialized.");
+    const { data, error } = await this.supabase.auth.signUp({
+        email, password, options: { data: { name, member_type: 'regular', role: 'member' } }
+    });
+    if (error || !data.user) throw new Error(error?.message || 'Registration failed');
+    // After sign up, Supabase automatically logs in the user and creates a session.
+    // We might need to create a profile entry separately if not handled by triggers.
+    // For now, just return the user from getCurrentUser which should pick up the session.
+    return this.getCurrentUser();
   }
 
   public async logout(): Promise<void> {
-    if (this.activeProvider === 'supabase') {
-        const { error } = await this.supabase.auth.signOut();
-        if (error) throw new Error(error.message);
-    } else {
-        await appwriteService.account.deleteSession('current');
-    }
+    if (!this.supabase?.auth) throw new Error("Supabase client not initialized.");
+    const { error } = await this.supabase.auth.signOut();
+    if (error) throw new Error(error.message);
   }
 
   // --- Document Operations (Generic) --- 
@@ -180,140 +141,93 @@ export class DataService implements DataServiceInterface {
   }
 
   public async getDocument<T>(collectionName: Collections, id: string): Promise<T | null> {
-    if (this.activeProvider === 'supabase') {
-      const { data, error } = await this.supabase
-        .from(this.mapCollection(collectionName))
-        .select('*')
-        .eq('id', id)
-        .single();
-      if (error) {
-        console.error(`Error fetching document: ${error.message}`);
-        return null;
-      }
-      return data as T | null;
-    } else {
-      const doc = await appwriteService.databases.getDocument(appwriteService.databaseId, collectionName, id);
-      return doc as T;
+    if (!this.supabase) throw new Error("Supabase client not initialized.");
+    const { data, error } = await this.supabase
+      .from(this.mapCollection(collectionName))
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error) {
+      console.error(`Error fetching document: ${error.message}`);
+      return null;
     }
+    return data as T | null;
   }
 
   public async listDocuments<T>(collectionName: Collections, filters: { [key: string]: any } = {}): Promise<T[]> {
-    if (this.activeProvider === 'supabase') {
-      let query = this.supabase.from(this.mapCollection(collectionName)).select('*');
-      
-      for (const key in filters) {
-        if (Object.prototype.hasOwnProperty.call(filters, key)) {
-          query = query.eq(key, filters[key]);
-        }
-      }
+    if (!this.supabase) throw new Error("Supabase client not initialized.");
+    let query = this.supabase.from(this.mapCollection(collectionName)).select('*');
 
-      const { data, error } = await query;
-      if (error) throw new Error(error.message);
-      return (data || []) as T[];
-    } else {
-      const appwriteQueries: string[] = [];
-      for (const key in filters) {
-        if (Object.prototype.hasOwnProperty.call(filters, key)) {
-          appwriteQueries.push(Query.equal(key, filters[key]));
-        }
+    for (const key in filters) {
+      if (Object.prototype.hasOwnProperty.call(filters, key)) {
+        query = query.eq(key, filters[key]);
       }
-      const { documents } = await appwriteService.databases.listDocuments(
-          appwriteService.databaseId, 
-          collectionName, 
-          appwriteQueries
-      );
-      return documents as T[];
     }
+
+    const { data, error } = await query;
+    if (error) throw new Error(error.message);
+    return (data || []) as T[];
   }
 
-  public async createDocument<T>(collectionName: Collections, doc: Partial<T>, permissions?: string[]): Promise<T> {
-    if (this.activeProvider === 'supabase') {
-      const { data, error } = await this.supabase
-        .from(this.mapCollection(collectionName))
-        .insert([doc])
-        .select()
-        .single();
-      if (error) throw new Error(error.message);
-      return data as T;
-    } else {
-      const newDoc = await appwriteService.databases.createDocument(appwriteService.databaseId, collectionName, ID.unique(), doc, permissions);
-      return newDoc as T;
-    }
+  public async createDocument<T>(collectionName: Collections, doc: Partial<T>, _permissions?: string[]): Promise<T> {
+    // Permissions are not directly handled this way in Supabase, RLS is used.
+    if (!this.supabase) throw new Error("Supabase client not initialized.");
+    const { data, error } = await this.supabase
+      .from(this.mapCollection(collectionName))
+      .insert([doc])
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return data as T;
   }
 
   public async updateDocument<T>(collectionName: Collections, id: string, doc: Partial<T>): Promise<T> {
-    if (this.activeProvider === 'supabase') {
-      const { data, error } = await this.supabase
-        .from(this.mapCollection(collectionName))
-        .update(doc)
-        .eq('id', id)
-        .select()
-        .single();
-      if (error) throw new Error(error.message);
-      return data as T;
-    } else {
-      const updatedDoc = await appwriteService.databases.updateDocument(appwriteService.databaseId, collectionName, id, doc);
-      return updatedDoc as T;
-    }
+    if (!this.supabase) throw new Error("Supabase client not initialized.");
+    const { data, error } = await this.supabase
+      .from(this.mapCollection(collectionName))
+      .update(doc)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return data as T;
   }
 
   public async deleteDocument(collectionName: Collections, id: string): Promise<void> {
-    if (this.activeProvider === 'supabase') {
-      const { error } = await this.supabase.from(this.mapCollection(collectionName)).delete().eq('id', id);
-      if (error) throw new Error(error.message);
-    } else {
-      await appwriteService.databases.deleteDocument(appwriteService.databaseId, collectionName, id);
-    }
+    if (!this.supabase) throw new Error("Supabase client not initialized.");
+    const { error } = await this.supabase.from(this.mapCollection(collectionName)).delete().eq('id', id);
+    if (error) throw new Error(error.message);
   }
 
   public async searchDocuments<T>(collectionName: Collections, searchField: keyof T, searchText: string): Promise<T[]> {
-    if (this.activeProvider === 'supabase') {
-        const { data, error } = await this.supabase
-            .from(this.mapCollection(collectionName))
-            .select()
-            .textSearch(searchField as string, `'${searchText}'`);
-        if (error) throw new Error(error.message);
-        return (data || []) as T[];
-    } else {
-        // Fallback to client-side filtering for Appwrite
-        const { documents } = await appwriteService.databases.listDocuments(
-            appwriteService.databaseId, 
-            collectionName, 
-            [Query.search(searchField as string, searchText)]
-        );
-        return documents as T[];
-    }
+    if (!this.supabase) throw new Error("Supabase client not initialized.");
+      const { data, error } = await this.supabase
+          .from(this.mapCollection(collectionName))
+          .select()
+          .textSearch(searchField as string, `'${searchText}'`); // Basic text search
+      if (error) throw new Error(error.message);
+      return (data || []) as T[];
   }
 
   // --- Storage Operations ---
 
   public async uploadFile(bucketId: string, file: File): Promise<string> {
-    if (this.activeProvider === 'supabase') {
-      const { data, error } = await this.supabase.storage.from(bucketId).upload(`${Date.now()}-${file.name}`, file);
-      if (error) throw new Error(error.message);
-      return data.path;
-    } else {
-      const result = await appwriteService.storage.createFile(bucketId, ID.unique(), file);
-      return result.$id;
-    }
+    if (!this.supabase?.storage) throw new Error("Supabase client not initialized.");
+    const { data, error } = await this.supabase.storage.from(bucketId).upload(`${Date.now()}-${file.name}`, file);
+    if (error) throw new Error(error.message);
+    return data.path;
   }
 
   public getFilePreview(bucketId: string, fileId: string): string {
-    if (this.activeProvider === 'supabase') {
-      const { data } = this.supabase.storage.from(bucketId).getPublicUrl(fileId);
-      return data.publicUrl;
-    } else {
-      return appwriteService.storage.getFilePreview(bucketId, fileId).toString();
-    }
+    if (!this.supabase?.storage) throw new Error("Supabase client not initialized.");
+    const { data } = this.supabase.storage.from(bucketId).getPublicUrl(fileId);
+    return data.publicUrl;
   }
 
   public async deleteFile(bucketId: string, fileId: string): Promise<void> {
-    if (this.activeProvider === 'supabase') {
-      const { error } = await this.supabase.storage.from(bucketId).remove([fileId]);
-      if (error) throw new Error(error.message);
-    } else {
-      await appwriteService.storage.deleteFile(bucketId, fileId);
-    }
+    if (!this.supabase?.storage) throw new Error("Supabase client not initialized.");
+    const { error } = await this.supabase.storage.from(bucketId).remove([fileId]);
+    if (error) throw new Error(error.message);
   }
 }
 

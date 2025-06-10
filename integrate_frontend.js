@@ -144,7 +144,11 @@ export function EdXCourseList() {
         const data = await response.json();
         setCourses(data);
       } catch (err) {
-        setError(err.message);
+        if (err) { // Defensive check
+          setError(String(err));
+        } else {
+          setError("An unknown error occurred");
+        }
       } finally {
         setLoading(false);
       }

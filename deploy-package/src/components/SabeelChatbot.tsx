@@ -242,7 +242,7 @@ const SabeelChatbot: React.FC<SabeelChatbotProps> = ({ onClose }) => {
   const getFallbackResponse = (input: string) => {
     const inputLower = input.toLowerCase();
     let responseContent = ''; // Renamed to avoid conflict
-    let responseSources: Source[] = []; // Renamed to avoid conflict
+    const responseSources: Source[] = []; // Renamed to avoid conflict
     
     // Basic fallback responses for critical queries
     if (inputLower.includes('سلام') || inputLower.includes('مرحبا') || inputLower.includes('أهلا')) {

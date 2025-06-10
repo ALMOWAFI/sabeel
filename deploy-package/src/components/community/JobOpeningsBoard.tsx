@@ -89,7 +89,7 @@ const JobOpeningsBoard: React.FC = () => {
       const databases = appwriteService.databases;
       
       // Create query based on filters
-      let queries = [];
+      const queries = [];
       if (filter !== 'all') {
         queries.push(Query.equal('category', filter));
       }

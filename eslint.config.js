@@ -25,5 +25,13 @@ export default tseslint.config(
       ],
       "@typescript-eslint/no-unused-vars": "off",
     },
+  },
+  // Override for integrate_frontend.js to specify CommonJS
+  {
+    files: ["integrate_frontend.js"],
+    languageOptions: {
+      sourceType: "commonjs",
+      globals: globals.node // Add node globals for this file
+    }
   }
 );
