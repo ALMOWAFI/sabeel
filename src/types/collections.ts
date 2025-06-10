@@ -16,6 +16,7 @@ export enum Collections {
   WHATSAPP_GROUPS = 'whatsapp_groups',
   EVENTS = 'events',
   NOTIFICATIONS = 'notifications',
+  CONTENT_ITEMS = 'content_items',
   
   // Islamic knowledge collections
   QURAN_VERSES = 'quran_verses',
@@ -50,6 +51,7 @@ export const CollectionMapping = {
   [Collections.WHATSAPP_GROUPS]: 'whatsapp_groups',
   [Collections.EVENTS]: 'events',
   [Collections.NOTIFICATIONS]: 'notifications',
+  [Collections.CONTENT_ITEMS]: 'content_items',
   
   [Collections.QURAN_VERSES]: 'quran_verses',
   [Collections.HADITH]: 'hadith',

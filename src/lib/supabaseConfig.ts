@@ -7,10 +7,9 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Use hardcoded values for local development
-// For production, these would come from environment variables
-const supabaseUrl = 'https://rfvgoxqwydinxolckxup.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJmdmdveHF3eWRpbnhvbGNreHVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE2ODUwMjExMDAsImV4cCI6MjAwMDU5NzEwMH0.X2S9FWGL4okoQ-tEI9ue7LiLo3cJZnQpmAqOe4o6BDI';
+// Use environment variables for configuration
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
 // Create a single supabase client for interacting with the database
 const supabase = createClient(supabaseUrl, supabaseAnonKey);

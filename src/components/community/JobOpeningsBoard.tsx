@@ -2,8 +2,8 @@
  * JobOpeningsBoard.tsx
  * 
  * Component for displaying available job positions and opportunities
- * in Islamic organizations and Sabeel platform itself
- * Using Appwrite backend
+ * in Islamic organizations and Sabeel platform itself.
+ * This component is now backend-agnostic, using a unified DataService.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Dialog,
   DialogContent,
@@ -27,10 +28,9 @@ import { Briefcase, MapPin, Clock, Filter, Search, ExternalLink, Send } from 'lu
 import { useToast } from "@/components/ui/use-toast";
 import { Spinner } from "@/components/ui/spinner";
 
-// Import centralized Appwrite services
-import appwriteService from '@/services/AppwriteService';
-import appwriteAuthBridge from '@/services/AppwriteAuthBridge';
-import { Query, ID } from 'appwrite';
+// Import the unified DataService
+import dataService from '@/services/DataService';
+import { Collections } from '@/types/collections';
 
 // Job position interface
 interface JobPosition {
@@ -50,7 +50,8 @@ interface JobPosition {
 
 const JobOpeningsBoard: React.FC = () => {
   const { toast } = useToast();
-  const [jobs, setJobs] = useState<JobPosition[]>([]);
+  const [allJobs, setAllJobs] = useState<JobPosition[]>([]);
+  const [filteredJobs, setFilteredJobs] = useState<JobPosition[]>([]);
   const [filter, setFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -69,141 +70,67 @@ const JobOpeningsBoard: React.FC = () => {
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Database configuration from centralized service
-  const databaseId = appwriteService.databaseId;
-  const jobCollectionId = appwriteService.collections.jobOpenings; // Collection for jobs
-  const activityCollectionId = appwriteService.collections.userActivities; // Collection for user activities
-
-  // Fetch jobs on component mount
+  // Fetch all jobs on component mount
   useEffect(() => {
+    const fetchJobs = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const jobListings = await dataService.listDocuments(Collections.JOB_OPENINGS);
+        
+        const formattedJobs = jobListings.map((job: any) => ({
+          id: job.id,
+          title: job.title || 'Untitled Position',
+          organization: job.organization || 'Unknown Organization',
+          location: job.location || 'Remote',
+          type: job.employment_type || 'full-time',
+          category: job.category || 'other',
+          description: job.description || 'No description provided',
+          requirements: job.skills_required || [],
+          contactEmail: job.contact_email || 'contact@example.com',
+          postedDate: job.posted_date ? new Date(job.posted_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          applicationDeadline: job.closing_date ? new Date(job.closing_date).toISOString().split('T')[0] : undefined,
+          isRemote: job.is_remote || false,
+        }));
+
+        setAllJobs(formattedJobs);
+        setFilteredJobs(formattedJobs);
+      } catch (err) {
+        console.error('Error fetching jobs:', err);
+        setError('Failed to load job openings. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     fetchJobs();
   }, []);
 
-  // Fetch jobs from Appwrite
-  const fetchJobs = async () => {
-    setIsLoading(true);
-    setError(null);
+  // Apply filters and search on the client side
+  useEffect(() => {
+    let jobs = allJobs;
 
-    try {
-      // Use the centralized appwriteService
-      const databases = appwriteService.databases;
-      
-      // Create query based on filters
-      let queries = [];
-      if (filter !== 'all') {
-        queries.push(Query.equal('category', filter));
-      }
-      
-      // Fetch job listings
-      const response = await databases.listDocuments(
-        databaseId,
-        jobCollectionId,
-        queries
-      );
-      
-      if (!response || !response.documents) {
-        throw new Error('Failed to fetch job listings');
-      }
-      
-      // Format the job data
-      const formattedJobs = response.documents.map((job: any) => ({
-        id: job.$id,
-        title: job.title || 'Untitled Position',
-        organization: job.organization || 'Unknown Organization',
-        location: job.location || 'Remote',
-        type: job.employment_type || 'full-time',
-        category: job.category || 'other',
-        description: job.description || 'No description provided',
-        requirements: job.skills_required || [],
-        contactEmail: job.contact_email || 'contact@example.com',
-        postedDate: job.posted_date ? new Date(job.posted_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        applicationDeadline: job.closing_date ? new Date(job.closing_date).toISOString().split('T')[0] : undefined,
-        isRemote: job.is_remote || false,
-      }));
-      
-      setJobs(formattedJobs);
-    } catch (err) {
-      console.error('Error fetching jobs:', err);
-      setError('Failed to load job openings. Please try again later.');
-    } finally {
-      setIsLoading(false);
+    // Apply category filter
+    if (filter !== 'all') {
+      jobs = jobs.filter(job => job.category === filter);
     }
-  };
 
-  // Search jobs
-  const searchJobs = async () => {
-    if (!searchQuery.trim()) {
-      fetchJobs();
-      return;
-    }
-    
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      // Fetch all documents and filter them on the client side
-      // Using our unified DataService abstraction
-      const databases = appwriteService.databases;
-      
-      const response = await databases.listDocuments(
-        databaseId,
-        jobCollectionId
+    // Apply search query
+    if (searchQuery.trim()) {
+      const lowercasedQuery = searchQuery.toLowerCase();
+      jobs = jobs.filter(job => 
+        job.title.toLowerCase().includes(lowercasedQuery) ||
+        job.organization.toLowerCase().includes(lowercasedQuery) ||
+        job.description.toLowerCase().includes(lowercasedQuery)
       );
-      
-      if (!response || !response.documents) {
-        throw new Error('Failed to fetch job listings');
-      }
-      
-      // Filter jobs by title or description containing the search query
-      const searchLower = searchQuery.toLowerCase();
-      const filteredJobs = response.documents.filter((job: any) => {
-        return (
-          (job.title && job.title.toLowerCase().includes(searchLower)) ||
-          (job.description && job.description.toLowerCase().includes(searchLower)) ||
-          (job.organization && job.organization.toLowerCase().includes(searchLower))
-        );
-      });
-      
-      // If filter is applied, further filter by category
-      const categoryFilteredJobs = filter !== 'all' 
-        ? filteredJobs.filter((job: any) => job.category === filter)
-        : filteredJobs;
-      
-      // Format the job data
-      const formattedJobs = categoryFilteredJobs.map((job: any) => ({
-        id: job.$id,
-        title: job.title || 'Untitled Position',
-        organization: job.organization || 'Unknown Organization',
-        location: job.location || 'Remote',
-        type: job.employment_type || 'full-time',
-        category: job.category || 'other',
-        description: job.description || 'No description provided',
-        requirements: job.skills_required || [],
-        contactEmail: job.contact_email || 'contact@example.com',
-        postedDate: job.posted_date ? new Date(job.posted_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        applicationDeadline: job.closing_date ? new Date(job.closing_date).toISOString().split('T')[0] : undefined,
-        isRemote: job.is_remote || false,
-      }));
-      
-      setJobs(formattedJobs);
-    } catch (err) {
-      console.error('Error searching jobs:', err);
-      setError('Failed to search job openings. Please try again later.');
-    } finally {
-      setIsLoading(false);
     }
-  };
+
+    setFilteredJobs(jobs);
+  }, [filter, searchQuery, allJobs]);
 
   // Handle filter change
   const handleFilterChange = (value: string) => {
     setFilter(value);
-    
-    // Re-fetch jobs with new filter
-    if (searchQuery) {
-      searchJobs();
-    } else {
-      fetchJobs();
-    }
   };
 
   // Handle search input change
@@ -214,7 +141,7 @@ const JobOpeningsBoard: React.FC = () => {
   // Handle search form submission
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    searchJobs();
+    // Search is now reactive, this function just prevents form submission
   };
 
   // Handle application form input changes
@@ -239,82 +166,48 @@ const JobOpeningsBoard: React.FC = () => {
   // Handle application submission
   const handleSubmitApplication = async () => {
     if (!selectedJobId) return;
-    
-    // Validate form
-    if (!applicationData.name || !applicationData.email) {
-      setSubmitResult({
-        success: false,
-        message: 'Please fill in all required fields',
-      });
-      return;
-    }
-    
+
     setIsSubmitting(true);
     setSubmitResult(null);
-    
+
     try {
-      // Get the current user
-      const userData = await appwriteAuthBridge.getCurrentUser();
-      
-      if (!userData) {
-        setSubmitResult({
-          success: false,
-          message: 'You must be logged in to apply for jobs',
-        });
-        return;
+      const currentUser = await dataService.getCurrentUser();
+      if (!currentUser) {
+        throw new Error('You must be logged in to apply.');
       }
-      
-      // We would upload the resume to Appwrite Storage in a real implementation
-      // For now, we'll just log that a resume was attached
-      const resumeSubmitted = applicationData.resume !== null;
-      
-      // Save application to user_activities collection using our centralized service
-      const databases = appwriteService.databases;
-      const document = await databases.createDocument(
-        databaseId,
-        activityCollectionId,
-        ID.unique(),
-        {
-          user_id: userData.userId,
-          activity_type: 'job_application',
-          details: {
-            job_id: selectedJobId,
-            name: applicationData.name,
-            email: applicationData.email,
-            phone: applicationData.phone,
-            coverletter: applicationData.coverletter,
-            resume_submitted: resumeSubmitted,
-            application_date: new Date().toISOString(),
-          }
-        }
-      );
-      
-      // Success
-      setSubmitResult({
-        success: true,
-        message: 'Your application has been submitted successfully!',
+
+      let resumeUrl = '';
+      if (applicationData.resume) {
+        const resumePath = await dataService.uploadFile('resumes', applicationData.resume);
+        resumeUrl = dataService.getFilePreview('resumes', resumePath);
+      }
+
+      // Record the application in the user activity collection
+      await dataService.createDocument(Collections.USER_ACTIVITIES, {
+        user_id: currentUser.userId,
+        activity_type: 'job_application',
+        metadata: {
+          job_id: selectedJobId,
+          applicant_name: applicationData.name,
+          applicant_email: applicationData.email,
+          cover_letter: applicationData.coverletter,
+          resume_url: resumeUrl,
+        },
+        status: 'submitted',
       });
-      
-      // Reset form
-      setApplicationData({
-        name: '',
-        email: '',
-        phone: '',
-        coverletter: '',
-        resume: null,
-      });
-      
-      // Close dialog after a short delay
+
+      setSubmitResult({ success: true, message: 'Application submitted successfully!' });
+      toast({ title: 'Success', description: 'Your application has been sent.' });
+
+      // Close dialog after a short delay on success
       setTimeout(() => {
         setSelectedJobId(null);
       }, 2000);
-      
-    } catch (err) {
-      console.error('Error submitting application:', err);
-      setSubmitResult({
-        success: false,
-        message: 'Failed to submit your application. Please try again later.',
-      });
+
+    } catch (error: any) {
+      console.error('Application submission error:', error);
+      setSubmitResult({ success: false, message: `Submission failed: ${error.message}` });
+      toast({ variant: 'destructive', title: 'Error', description: `Failed to submit application: ${error.message}` });
     } finally {
       setIsSubmitting(false);
     }
@@ -428,7 +321,7 @@ const JobOpeningsBoard: React.FC = () => {
       ) : (
         /* Job listings */
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {jobs.length === 0 ? (
+          {filteredJobs.length === 0 ? (
             <div className="col-span-full text-center py-12 bg-gray-50 rounded-lg">
               <Briefcase className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <h3 className="text-lg font-medium mb-2">لا توجد وظائف متاحة حالياً</h3>
@@ -437,7 +330,7 @@ const JobOpeningsBoard: React.FC = () => {
               </p>
             </div>
           ) : (
-            jobs.map((job) => (
+            filteredJobs.map((job) => (
               <Card key={job.id} className="overflow-hidden">
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">

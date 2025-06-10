@@ -3,20 +3,21 @@
  * 
  * A unified data service abstraction layer that provides consistent
  * access to backend services regardless of the underlying provider
- * (Appwrite or Supabase).
+ * (Appwrite or Supabase). This service is designed to be robust,
+ * type-safe, and easily extensible.
  */
 
 import { User } from '@/types/user';
-import { ID } from 'appwrite';
+import { ID, Query } from 'appwrite';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import appwriteService from './AppwriteService';
-import { Collections } from '@/types/collections';
+import { Collections, CollectionMapping } from '@/types/collections';
 
 // Environment variables for Supabase
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Define common interfaces for data operations
+// Define common interfaces for data operations using generics for type safety
 export interface DataServiceInterface {
   // Authentication operations
   getCurrentUser(): Promise<User | null>;
@@ -24,42 +25,44 @@ export interface DataServiceInterface {
   register(email: string, password: string, name: string): Promise<User | null>;
   logout(): Promise<void>;
   
-  // Document operations
-  getDocument(collection: string, id: string): Promise<any>;
-  listDocuments(collection: string, queries?: any[]): Promise<any[]>;
-  createDocument(collection: string, data: any): Promise<any>;
-  updateDocument(collection: string, id: string, data: any): Promise<any>;
-  deleteDocument(collection: string, id: string): Promise<void>;
-  
+  // Generic document operations
+  getDocument<T>(collectionName: Collections, id: string): Promise<T | null>;
+  listDocuments<T>(collectionName: Collections, filters?: { [key: string]: any }): Promise<T[]>;
+  createDocument<T>(collectionName: Collections, data: Partial<T>, permissions?: string[]): Promise<T>;
+  updateDocument<T>(collectionName: Collections, id: string, data: Partial<T>): Promise<T>;
+  deleteDocument(collectionName: Collections, id: string): Promise<void>;
+  searchDocuments<T>(collectionName: Collections, searchField: keyof T, searchText: string): Promise<T[]>;
+
   // Storage operations
   uploadFile(bucketId: string, file: File): Promise<string>;
   getFilePreview(bucketId: string, fileId: string): string;
   deleteFile(bucketId: string, fileId: string): Promise<void>;
   
-  // Get the backend provider name
+  // Provider management
   getProviderName(): 'appwrite' | 'supabase';
+  setProvider(provider: 'appwrite' | 'supabase'): void;
 }
 
 /**
- * Unified implementation with Supabase as primary backend
- * Falls back to Appwrite when needed
+ * Unified implementation of the DataService with Supabase as the primary backend,
+ * falling back to Appwrite when Supabase is not available or configured.
  */
 export class DataService implements DataServiceInterface {
   private static instance: DataService;
   private supabase: SupabaseClient;
-  private activeProvider: 'appwrite' | 'supabase' = 'supabase'; // Default to Supabase
+  private activeProvider: 'appwrite' | 'supabase' = 'supabase';
   
   private constructor() {
-    // Initialize Supabase client
-    this.supabase = createClient(supabaseUrl, supabaseAnonKey);
-    
-    // Determine which provider to use primarily
-    this.detectProvider();
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.warn('Supabase credentials are not provided. Falling back to Appwrite.');
+      this.activeProvider = 'appwrite';
+      this.supabase = {} as SupabaseClient; // Dummy client to satisfy type
+    } else {
+      this.supabase = createClient(supabaseUrl, supabaseAnonKey);
+      this.detectProvider();
+    }
   }
   
-  /**
-   * Singleton pattern - get the instance of DataService
-   */
   public static getInstance(): DataService {
     if (!DataService.instance) {
       DataService.instance = new DataService();
@@ -67,479 +70,253 @@ export class DataService implements DataServiceInterface {
     return DataService.instance;
   }
   
-  /**
-   * Detect which provider to use based on environment and availability
-   */
   private async detectProvider(): Promise<void> {
     try {
-      // Check if Supabase is properly configured
-      const { data, error } = await this.supabase.from('health_check').select('status').maybeSingle();
-      
-      if (!error && data) {
-        this.activeProvider = 'supabase';
-        console.log('Using Supabase as primary data provider');
-      } else {
-        // If Supabase check fails, fallback to checking Appwrite
-        try {
-          const response = await appwriteService.account.get();
-          if (response) {
-            this.activeProvider = 'appwrite';
-            console.log('Using Appwrite as primary data provider');
-          }
-        } catch (appwriteError) {
-          console.error('Both Supabase and Appwrite connections failed', appwriteError);
-          this.activeProvider = 'supabase'; // Default to Supabase even if it fails
-        }
+      const { error } = await this.supabase.from('profiles').select('id').limit(1);
+      if (error && error.code !== '42P01') { // '42P01' = undefined_table
+        throw new Error(`Supabase health check failed: ${error.message}`);
       }
-    } catch (error) {
-      console.error('Error detecting provider', error);
-      this.activeProvider = 'supabase'; // Default to Supabase
+      this.activeProvider = 'supabase';
+      console.log('DataService is using Supabase provider.');
+    } catch (e: any) {
+      console.warn(`Supabase is not reachable: ${e.message}. Falling back to Appwrite.`);
+      this.activeProvider = 'appwrite';
     }
   }
   
-  /**
-   * Get current provider name
-   */
   public getProviderName(): 'appwrite' | 'supabase' {
     return this.activeProvider;
   }
   
-  /**
-   * Set which backend provider to use
-   */
   public setProvider(provider: 'appwrite' | 'supabase'): void {
+    if (provider === 'supabase' && (!supabaseUrl || !supabaseAnonKey)) {
+        console.error('Cannot switch to Supabase: credentials are not configured.');
+        return;
+    }
     this.activeProvider = provider;
   }
 
-  /**
-   * Get the currently authenticated user
-   */
+  // --- Authentication --- 
+
   public async getCurrentUser(): Promise<User | null> {
     if (this.activeProvider === 'supabase') {
-      const { data, error } = await this.supabase.auth.getUser();
-      
-      if (error || !data.user) {
-        return null;
-      }
-      
-      // Get user profile from Supabase
+      const { data: { session } } = await this.supabase.auth.getSession();
+      if (!session) return null;
+
       const { data: profile } = await this.supabase
         .from('profiles')
         .select('*')
-        .eq('id', data.user.id)
+        .eq('id', session.user.id)
         .single();
       
       return {
-        userId: data.user.id,
-        email: data.user.email || '',
-        name: profile?.name || data.user.email?.split('@')[0] || '',
+        userId: session.user.id,
+        email: session.user.email || '',
+        name: profile?.name || session.user.email?.split('@')[0] || 'Anonymous',
         memberType: profile?.member_type || 'regular',
         role: profile?.role || 'member',
-        createdAt: data.user.created_at || new Date().toISOString(),
+        createdAt: profile?.created_at || session.user.created_at,
       };
     } else {
-      // Appwrite implementation
       try {
-        const userData = await appwriteService.account.get();
-        
-        // Get user preferences from Appwrite
-        const preferences = await appwriteService.account.getPrefs();
-        
+        const user = await appwriteService.account.get();
+        const prefs = await appwriteService.account.getPrefs();
         return {
-          userId: userData.$id,
-          email: userData.email,
-          name: preferences.name || userData.email.split('@')[0],
-          memberType: preferences.memberType || 'regular',
-          role: preferences.role || 'member',
-          createdAt: userData.$createdAt,
+          userId: user.$id,
+          email: user.email,
+          name: prefs.name || user.name,
+          memberType: prefs.memberType || 'regular',
+          role: prefs.role || 'member',
+          createdAt: user.$createdAt,
         };
-      } catch (error) {
+      } catch {
         return null;
       }
     }
   }
 
-  /**
-   * Login with email and password
-   */
   public async login(email: string, password: string): Promise<User | null> {
     if (this.activeProvider === 'supabase') {
-      const { data, error } = await this.supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      if (error || !data.user) {
-        throw new Error(error?.message || 'Login failed');
-      }
-      
-      // Get user profile
-      const { data: profile } = await this.supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', data.user.id)
-        .single();
-      
-      return {
-        userId: data.user.id,
-        email: data.user.email || '',
-        name: profile?.name || data.user.email?.split('@')[0] || '',
-        memberType: profile?.member_type || 'regular',
-        role: profile?.role || 'member',
-        createdAt: data.user.created_at || new Date().toISOString(),
-      };
+        const { data, error } = await this.supabase.auth.signInWithPassword({ email, password });
+        if (error || !data.user) throw new Error(error?.message || 'Login failed');
+        return this.getCurrentUser();
     } else {
-      try {
-        const session = await appwriteService.account.createEmailSession(email, password);
-        const userData = await appwriteService.account.get();
-        const preferences = await appwriteService.account.getPrefs();
-        
-        return {
-          userId: userData.$id,
-          email: userData.email,
-          name: preferences.name || userData.email.split('@')[0],
-          memberType: preferences.memberType || 'regular',
-          role: preferences.role || 'member',
-          createdAt: userData.$createdAt,
-        };
-      } catch (error: any) {
-        throw new Error(error.message || 'Login failed');
-      }
+        await appwriteService.account.createEmailSession(email, password);
+        return this.getCurrentUser();
     }
   }
 
-  /**
-   * Register a new user
-   */
   public async register(email: string, password: string, name: string): Promise<User | null> {
     if (this.activeProvider === 'supabase') {
-      const { data, error } = await this.supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-          }
-        }
-      });
-      
-      if (error || !data.user) {
-        throw new Error(error?.message || 'Registration failed');
-      }
-      
-      // Create profile in profiles table
-      await this.supabase.from('profiles').insert({
-        id: data.user.id,
-        name,
-        member_type: 'regular',
-        role: 'member',
-      });
-      
-      return {
-        userId: data.user.id,
-        email: data.user.email || '',
-        name,
-        memberType: 'regular',
-        role: 'member',
-        createdAt: data.user.created_at || new Date().toISOString(),
-      };
-    } else {
-      try {
-        const userData = await appwriteService.account.create(
-          ID.unique(),
-          email,
-          password,
-          name
-        );
-        
-        // Set user preferences
-        await appwriteService.account.updatePrefs({
-          name,
-          memberType: 'regular',
-          role: 'member'
+        const { data, error } = await this.supabase.auth.signUp({
+            email, password, options: { data: { name, member_type: 'regular', role: 'member' } }
         });
-        
-        // Create email session
-        await appwriteService.account.createEmailSession(email, password);
-        
-        return {
-          userId: userData.$id,
-          email: userData.email,
-          name,
-          memberType: 'regular',
-          role: 'member',
-          createdAt: userData.$createdAt,
-        };
-      } catch (error: any) {
-        throw new Error(error.message || 'Registration failed');
-      }
+        if (error || !data.user) throw new Error(error?.message || 'Registration failed');
+        return this.getCurrentUser();
+    } else {
+        await appwriteService.account.create(ID.unique(), email, password, name);
+        await appwriteService.account.updatePrefs({ name, memberType: 'regular', role: 'member' });
+        return this.login(email, password);
     }
   }
 
-  /**
-   * Log out the current user
-   */
   public async logout(): Promise<void> {
     if (this.activeProvider === 'supabase') {
-      const { error } = await this.supabase.auth.signOut();
-      if (error) {
-        throw new Error(error.message);
-      }
+        const { error } = await this.supabase.auth.signOut();
+        if (error) throw new Error(error.message);
     } else {
-      try {
         await appwriteService.account.deleteSession('current');
-      } catch (error: any) {
-        throw new Error(error.message || 'Logout failed');
-      }
     }
   }
 
-  /**
-   * Get a single document by ID
-   */
-  public async getDocument(collection: string, id: string): Promise<any> {
+  // --- Document Operations (Generic) --- 
+
+  private mapCollection(collectionName: Collections): string {
+    const tableName = CollectionMapping[collectionName];
+    if (!tableName) {
+      throw new Error(`Collection '${collectionName}' is not mapped to a Supabase table.`);
+    }
+    return tableName;
+  }
+
+  public async getDocument<T>(collectionName: Collections, id: string): Promise<T | null> {
     if (this.activeProvider === 'supabase') {
       const { data, error } = await this.supabase
-        .from(this.mapCollectionToTable(collection))
+        .from(this.mapCollection(collectionName))
         .select('*')
         .eq('id', id)
         .single();
-      
       if (error) {
-        throw new Error(error.message);
+        console.error(`Error fetching document: ${error.message}`);
+        return null;
       }
-      
-      return data;
+      return data as T | null;
     } else {
-      try {
-        return await appwriteService.databases.getDocument(
-          appwriteService.databaseId,
-          collection,
-          id
-        );
-      } catch (error: any) {
-        throw new Error(error.message || 'Failed to get document');
-      }
+      const doc = await appwriteService.databases.getDocument(appwriteService.databaseId, collectionName, id);
+      return doc as T;
     }
   }
 
-  /**
-   * List documents with optional queries
-   */
-  public async listDocuments(collection: string, queries?: any[]): Promise<any[]> {
+  public async listDocuments<T>(collectionName: Collections, filters: { [key: string]: any } = {}): Promise<T[]> {
     if (this.activeProvider === 'supabase') {
-      let query = this.supabase
-        .from(this.mapCollectionToTable(collection))
-        .select('*');
+      let query = this.supabase.from(this.mapCollection(collectionName)).select('*');
       
-      // Apply filters (simplified implementation)
-      if (queries && queries.length > 0) {
-        // Simple implementation for equality filters
-        queries.forEach(q => {
-          if (q.type === 'equal' && q.field && q.value) {
-            query = query.eq(q.field, q.value);
-          }
-        });
+      for (const key in filters) {
+        if (Object.prototype.hasOwnProperty.call(filters, key)) {
+          query = query.eq(key, filters[key]);
+        }
       }
-      
+
       const { data, error } = await query;
-      
-      if (error) {
-        throw new Error(error.message);
-      }
-      
-      return data || [];
+      if (error) throw new Error(error.message);
+      return (data || []) as T[];
     } else {
-      try {
-        const response = await appwriteService.databases.listDocuments(
-          appwriteService.databaseId,
-          collection,
-          queries
-        );
-        
-        return response.documents;
-      } catch (error: any) {
-        throw new Error(error.message || 'Failed to list documents');
+      const appwriteQueries: string[] = [];
+      for (const key in filters) {
+        if (Object.prototype.hasOwnProperty.call(filters, key)) {
+          appwriteQueries.push(Query.equal(key, filters[key]));
+        }
       }
+      const { documents } = await appwriteService.databases.listDocuments(
+          appwriteService.databaseId, 
+          collectionName, 
+          appwriteQueries
+      );
+      return documents as T[];
     }
   }
 
-  /**
-   * Create a new document
-   */
-  public async createDocument(collection: string, data: any): Promise<any> {
+  public async createDocument<T>(collectionName: Collections, doc: Partial<T>, permissions?: string[]): Promise<T> {
     if (this.activeProvider === 'supabase') {
-      const { data: result, error } = await this.supabase
-        .from(this.mapCollectionToTable(collection))
-        .insert(data)
+      const { data, error } = await this.supabase
+        .from(this.mapCollection(collectionName))
+        .insert([doc])
         .select()
         .single();
-      
-      if (error) {
-        throw new Error(error.message);
-      }
-      
-      return result;
+      if (error) throw new Error(error.message);
+      return data as T;
     } else {
-      try {
-        return await appwriteService.databases.createDocument(
-          appwriteService.databaseId,
-          collection,
-          ID.unique(),
-          data
-        );
-      } catch (error: any) {
-        throw new Error(error.message || 'Failed to create document');
-      }
+      const newDoc = await appwriteService.databases.createDocument(appwriteService.databaseId, collectionName, ID.unique(), doc, permissions);
+      return newDoc as T;
     }
   }
 
-  /**
-   * Update an existing document
-   */
-  public async updateDocument(collection: string, id: string, data: any): Promise<any> {
+  public async updateDocument<T>(collectionName: Collections, id: string, doc: Partial<T>): Promise<T> {
     if (this.activeProvider === 'supabase') {
-      const { data: result, error } = await this.supabase
-        .from(this.mapCollectionToTable(collection))
-        .update(data)
+      const { data, error } = await this.supabase
+        .from(this.mapCollection(collectionName))
+        .update(doc)
         .eq('id', id)
         .select()
         .single();
-      
-      if (error) {
-        throw new Error(error.message);
-      }
-      
-      return result;
+      if (error) throw new Error(error.message);
+      return data as T;
     } else {
-      try {
-        return await appwriteService.databases.updateDocument(
-          appwriteService.databaseId,
-          collection,
-          id,
-          data
-        );
-      } catch (error: any) {
-        throw new Error(error.message || 'Failed to update document');
-      }
+      const updatedDoc = await appwriteService.databases.updateDocument(appwriteService.databaseId, collectionName, id, doc);
+      return updatedDoc as T;
     }
   }
 
-  /**
-   * Delete a document
-   */
-  public async deleteDocument(collection: string, id: string): Promise<void> {
+  public async deleteDocument(collectionName: Collections, id: string): Promise<void> {
     if (this.activeProvider === 'supabase') {
-      const { error } = await this.supabase
-        .from(this.mapCollectionToTable(collection))
-        .delete()
-        .eq('id', id);
-      
-      if (error) {
-        throw new Error(error.message);
-      }
+      const { error } = await this.supabase.from(this.mapCollection(collectionName)).delete().eq('id', id);
+      if (error) throw new Error(error.message);
     } else {
-      try {
-        await appwriteService.databases.deleteDocument(
-          appwriteService.databaseId,
-          collection,
-          id
-        );
-      } catch (error: any) {
-        throw new Error(error.message || 'Failed to delete document');
-      }
+      await appwriteService.databases.deleteDocument(appwriteService.databaseId, collectionName, id);
     }
   }
 
-  /**
-   * Upload a file to storage
-   */
+  public async searchDocuments<T>(collectionName: Collections, searchField: keyof T, searchText: string): Promise<T[]> {
+    if (this.activeProvider === 'supabase') {
+        const { data, error } = await this.supabase
+            .from(this.mapCollection(collectionName))
+            .select()
+            .textSearch(searchField as string, `'${searchText}'`);
+        if (error) throw new Error(error.message);
+        return (data || []) as T[];
+    } else {
+        // Fallback to client-side filtering for Appwrite
+        const { documents } = await appwriteService.databases.listDocuments(
+            appwriteService.databaseId, 
+            collectionName, 
+            [Query.search(searchField as string, searchText)]
+        );
+        return documents as T[];
+    }
+  }
+
+  // --- Storage Operations ---
+
   public async uploadFile(bucketId: string, file: File): Promise<string> {
     if (this.activeProvider === 'supabase') {
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${file.name}`;
-      const { data, error } = await this.supabase
-        .storage
-        .from(bucketId)
-        .upload(fileName, file);
-      
-      if (error) {
-        throw new Error(error.message);
-      }
-      
-      return data?.path || '';
+      const { data, error } = await this.supabase.storage.from(bucketId).upload(`${Date.now()}-${file.name}`, file);
+      if (error) throw new Error(error.message);
+      return data.path;
     } else {
-      try {
-        const result = await appwriteService.storage.createFile(
-          bucketId,
-          ID.unique(),
-          file
-        );
-        
-        return result.$id;
-      } catch (error: any) {
-        throw new Error(error.message || 'Failed to upload file');
-      }
+      const result = await appwriteService.storage.createFile(bucketId, ID.unique(), file);
+      return result.$id;
     }
   }
 
-  /**
-   * Get a file preview URL
-   */
   public getFilePreview(bucketId: string, fileId: string): string {
     if (this.activeProvider === 'supabase') {
-      return this.supabase
-        .storage
-        .from(bucketId)
-        .getPublicUrl(fileId).data.publicUrl;
+      const { data } = this.supabase.storage.from(bucketId).getPublicUrl(fileId);
+      return data.publicUrl;
     } else {
-      return appwriteService.storage.getFilePreview(
-        bucketId,
-        fileId
-      );
+      return appwriteService.storage.getFilePreview(bucketId, fileId).toString();
     }
   }
 
-  /**
-   * Delete a file
-   */
   public async deleteFile(bucketId: string, fileId: string): Promise<void> {
     if (this.activeProvider === 'supabase') {
-      const { error } = await this.supabase
-        .storage
-        .from(bucketId)
-        .remove([fileId]);
-      
-      if (error) {
-        throw new Error(error.message);
-      }
+      const { error } = await this.supabase.storage.from(bucketId).remove([fileId]);
+      if (error) throw new Error(error.message);
     } else {
-      try {
-        await appwriteService.storage.deleteFile(
-          bucketId,
-          fileId
-        );
-      } catch (error: any) {
-        throw new Error(error.message || 'Failed to delete file');
-      }
+      await appwriteService.storage.deleteFile(bucketId, fileId);
     }
-  }
-
-  /**
-   * Map Appwrite collection names to Supabase table names
-   */
-  private mapCollectionToTable(collection: string): string {
-    const mapping: Record<string, string> = {
-      [Collections.JOB_OPENINGS]: 'job_openings',
-      [Collections.USER_ACTIVITIES]: 'user_activities',
-      [Collections.WHATSAPP_GROUPS]: 'whatsapp_groups',
-      [Collections.EVENTS]: 'events',
-      [Collections.NOTIFICATIONS]: 'notifications',
-      // Add more mappings as needed
-    };
-    
-    return mapping[collection] || collection.toLowerCase();
   }
 }
 
-// Export singleton instance
-export default DataService.getInstance();
+// Export a singleton instance for global use
+const dataService = DataService.getInstance();
+export default dataService;

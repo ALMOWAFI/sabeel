@@ -3,12 +3,13 @@
  * 
  * Rich content creation and publishing platform for Islamic scholars and educators
  * Allows creation of various content types with moderation workflow
- * Integrated with Supabase database for content management
+ * Integrated with the unified DataService for content management
  */
 
 import React, { useState, useEffect } from 'react';
-import supabaseAuthService from '@/services/SupabaseAuthService';
-import supabaseDatabaseService from '@/services/SupabaseDatabaseService';
+import dataService from '@/services/DataService';
+import { Collections } from '@/types/collections';
+import { User } from '@/types/user';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,7 @@ interface ContentDraft {
   content: string;
   excerpt: string;
   contentType: 'article' | 'book' | 'video' | 'course' | 'question';
-  status: 'draft' | 'published' | 'pending' | 'rejected';
+  status: 'draft' | 'published' | 'pending' | 'rejected' | 'in_review';
   tags: string[];
   language: string;
   coverImage?: string;
@@ -56,7 +57,7 @@ interface ContentDraft {
   requiresReview: boolean;
 }
 
-// Map Supabase content item to our ContentDraft interface
+// Map backend content item to our ContentDraft interface
 const mapContentItemToDraft = (item: any): ContentDraft => {
   return {
     id: item.id,
@@ -72,7 +73,7 @@ const mapContentItemToDraft = (item: any): ContentDraft => {
     language: item.language,
     coverImage: item.cover_image_url,
     categories: [item.category],
-    lastUpdated: new Date(item.updated_at).toISOString().split('T')[0],
+    lastUpdated: new Date(item.updated_at || item.$updatedAt).toISOString().split('T')[0],
     publishDate: item.published_at ? new Date(item.published_at).toISOString().split('T')[0] : undefined,
     isPublic: item.status === 'published',
     requiresReview: true,
@@ -85,7 +86,7 @@ const ContentCreationStudio: React.FC = () => {
   const [activeTab, setActiveTab] = useState('create');
   const [drafts, setDrafts] = useState<ContentDraft[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [contentType, setContentType] = useState<ContentDraft['contentType']>('article');
   const [formData, setFormData] = useState({
     title: '',
@@ -139,403 +140,226 @@ const ContentCreationStudio: React.FC = () => {
   
   // Save as draft
   const handleSaveDraft = async () => {
-    // Validate form
     if (!formData.title || !formData.content) {
-      toast({
-        variant: "destructive",
-        title: "يرجى ملء الحقول المطلوبة",
-        description: "العنوان والمحتوى مطلوبان"
-      });
+      toast({ variant: "destructive", title: "يرجى ملء الحقول المطلوبة", description: "العنوان والمحتوى مطلوبان" });
       return;
     }
     
     if (!currentUser) {
-      toast({
-        variant: "destructive",
-        title: "يرجى تسجيل الدخول",
-        description: "يجب تسجيل الدخول لحفظ المحتوى"
-      });
+      toast({ variant: "destructive", title: "يرجى تسجيل الدخول", description: "يجب تسجيل الدخول لحفظ المحتوى" });
       return;
     }
     
     try {
       setIsLoading(true);
       
-      // Create content item in Supabase
       const contentItem = {
         title: formData.title,
         content: formData.content,
         summary: formData.excerpt || formData.content.substring(0, 150) + '...',
         category: contentType,
         tags: formData.tags.split(',').map(tag => tag.trim()),
-        status: 'draft' as 'draft' | 'published' | 'rejected' | 'in_review',
-        author_id: currentUser.id,
+        status: 'draft' as ContentDraft['status'],
+        author_id: currentUser.userId,
         language: formData.language,
         read_time_minutes: Math.ceil(formData.content.length / 1000)
       };
       
-      const savedItem = await supabaseDatabaseService.createContentItem(contentItem);
+      const savedItem = await dataService.createDocument(Collections.CONTENT_ITEMS, contentItem);
       
-      // Map to ContentDraft and add to state
       const newDraft = mapContentItemToDraft(savedItem);
       setDrafts(prev => [newDraft, ...prev]);
       
-      toast({
-        title: "تم الحفظ",
-        description: "تم حفظ المحتوى كمسودة"
-      });
+      toast({ title: "تم الحفظ", description: "تم حفظ المحتوى كمسودة" });
       
-      // Switch to drafts tab
       setActiveTab('drafts');
       clearForm();
     } catch (error) {
       console.error('Error saving draft:', error);
-      toast({
-        variant: "destructive",
-        title: "خطأ في الحفظ",
-        description: "حدث خطأ أثناء حفظ المسودة"
-      });
+      toast({ variant: "destructive", title: "خطأ في الحفظ", description: "حدث خطأ أثناء حفظ المسودة" });
     } finally {
       setIsLoading(false);
     }
   };
   
-  // Submit for review
-  const handleSubmitForReview = async () => {
-    // Validate form
-    if (!formData.title || !formData.content || !formData.excerpt) {
-      toast({
-        variant: "destructive",
-        title: "يرجى ملء الحقول المطلوبة",
-        description: "العنوان والمحتوى والملخص مطلوبة للمراجعة"
-      });
-      return;
-    }
-    
-    if (!currentUser) {
-      toast({
-        variant: "destructive",
-        title: "يرجى تسجيل الدخول",
-        description: "يجب تسجيل الدخول لإرسال المحتوى للمراجعة"
-      });
-      return;
-    }
+  // Publish content
+  const handlePublish = async (draftId: string) => {
+    if (!currentUser) return;
     
     try {
       setIsLoading(true);
-      
-      // Create content item in Supabase
-      const contentItem = {
-        title: formData.title,
-        content: formData.content,
-        summary: formData.excerpt,
-        category: contentType,
-        tags: formData.tags.split(',').map(tag => tag.trim()),
-        status: 'in_review' as 'draft' | 'published' | 'rejected' | 'in_review',
-        author_id: currentUser.id,
-        language: formData.language,
-        read_time_minutes: Math.ceil(formData.content.length / 1000)
+      const updatedContent = { 
+        status: 'published' as ContentDraft['status'],
+        published_at: new Date().toISOString()
       };
       
-      const savedItem = await supabaseDatabaseService.createContentItem(contentItem);
+      await dataService.updateDocument(Collections.CONTENT_ITEMS, draftId, updatedContent);
       
-      // Map to ContentDraft and add to state
-      const newSubmission = mapContentItemToDraft(savedItem);
-      newSubmission.status = 'pending'; // For UI display purposes
+      setDrafts(prev => prev.map(d => d.id === draftId ? { ...d, status: 'published' } : d));
       
-      setDrafts(prev => [newSubmission, ...prev]);
-      
-      toast({
-        title: "تم الإرسال للمراجعة",
-        description: "تم إرسال المحتوى للمراجعة وسيتم نشره بعد الموافقة عليه"
-      });
-      
-      // Switch to drafts tab
-      setActiveTab('drafts');
-      clearForm();
+      toast({ title: "تم النشر", description: "تم نشر المحتوى بنجاح" });
     } catch (error) {
-      console.error('Error submitting for review:', error);
-      toast({
-        variant: "destructive",
-        title: "خطأ في الإرسال",
-        description: "حدث خطأ أثناء إرسال المحتوى للمراجعة"
-      });
+      console.error('Error publishing content:', error);
+      toast({ variant: "destructive", title: "خطأ في النشر", description: "حدث خطأ أثناء نشر المحتوى" });
     } finally {
       setIsLoading(false);
     }
   };
   
-  // Get status badge for draft
-  const getStatusBadge = (status: ContentDraft['status']) => {
-    switch (status) {
-      case 'published':
-        return <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">منشور</span>;
-      case 'draft':
-        return <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs">مسودة</span>;
-      case 'pending':
-        return <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-xs">قيد المراجعة</span>;
-      case 'rejected':
-        return <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs">مرفوض</span>;
-      default:
-        return null;
+  // Delete draft
+  const handleDeleteDraft = async (draftId: string) => {
+    if (!currentUser) return;
+    
+    try {
+      setIsLoading(true);
+      await dataService.deleteDocument(Collections.CONTENT_ITEMS, draftId);
+      setDrafts(prev => prev.filter(d => d.id !== draftId));
+      toast({ title: "تم الحذف", description: "تم حذف المسودة بنجاح" });
+    } catch (error) {
+      console.error('Error deleting draft:', error);
+      toast({ variant: "destructive", title: "خطأ في الحذف", description: "حدث خطأ أثناء حذف المسودة" });
+    } finally {
+      setIsLoading(false);
     }
   };
   
-  // Get content type icon
-  const getContentTypeIcon = (type: ContentDraft['contentType']) => {
-    const contentType = contentTypes.find(t => t.value === type);
-    return contentType ? contentType.icon : <FileText className="h-4 w-4" />;
-  };
-  
-  // Load user data and drafts
+  // Fetch user and drafts on component mount
   useEffect(() => {
-    const loadUserAndDrafts = async () => {
+    const checkUserAndFetchData = async () => {
+      setIsLoading(true);
       try {
-        setIsLoading(true);
-        
-        // Get current user
-        const user = await supabaseAuthService.getCurrentUser();
+        const user = await dataService.getCurrentUser();
         setCurrentUser(user);
         
         if (user) {
-          // Get user's content items
-          const contentItems = await supabaseDatabaseService.getContentItemsByAuthor(user.id);
-          
-          // Map to ContentDraft interface
+          const contentItems = await dataService.listDocuments<any>(
+            Collections.CONTENT_ITEMS, 
+            { author_id: user.userId }
+          );
           const userDrafts = contentItems.map(mapContentItemToDraft);
           setDrafts(userDrafts);
+        } else {
+          setDrafts([]);
         }
       } catch (error) {
-        console.error('Error loading user data and drafts:', error);
-        toast({
-          variant: "destructive",
-          title: "خطأ في التحميل",
-          description: "حدث خطأ أثناء تحميل البيانات"
-        });
+        console.error('Error fetching data:', error);
+        toast({ variant: "destructive", title: "خطأ", description: "فشل تحميل البيانات" });
       } finally {
         setIsLoading(false);
       }
     };
     
-    loadUserAndDrafts();
+    checkUserAndFetchData();
   }, [toast]);
   
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-right">استوديو إنشاء المحتوى</CardTitle>
-        <CardDescription className="text-right">
-          أنشئ ونشر محتوى تعليمي إسلامي عالي الجودة وشاركه مع المجتمع
-        </CardDescription>
-      </CardHeader>
-      
-      <CardContent>
-        <Tabs defaultValue="create" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="create">إنشاء محتوى جديد</TabsTrigger>
-            <TabsTrigger value="drafts">المسودات ({drafts.length})</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="create" className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <Label htmlFor="contentType" className="text-right block">نوع المحتوى</Label>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                {contentTypes.map(type => (
-                  <Button
-                    key={type.value}
-                    type="button"
-                    variant={contentType === type.value ? "default" : "outline"}
-                    className="flex items-center justify-center"
-                    onClick={() => handleContentTypeChange(type.value)}
-                  >
-                    {type.icon}
-                    <span>{type.label}</span>
-                  </Button>
-                ))}
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="title" className="text-right block">العنوان</Label>
-              <Input
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleInputChange}
-                className="text-right"
-                placeholder="أدخل عنوان المحتوى..."
-                required
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="categories" className="text-right block">التصنيفات</Label>
-                <Input
-                  id="categories"
-                  name="categories"
-                  value={formData.categories}
-                  onChange={handleInputChange}
-                  className="text-right"
-                  placeholder="عقيدة، فقه، سيرة (مفصولة بفواصل)"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="tags" className="text-right block">الوسوم</Label>
-                <Input
-                  id="tags"
-                  name="tags"
-                  value={formData.tags}
-                  onChange={handleInputChange}
-                  className="text-right"
-                  placeholder="أدخل وسوم مفصولة بفواصل"
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="excerpt" className="text-right block">ملخص</Label>
-              <Textarea
-                id="excerpt"
-                name="excerpt"
-                value={formData.excerpt}
-                onChange={handleInputChange}
-                className="text-right h-20"
-                placeholder="اكتب ملخصًا قصيرًا للمحتوى..."
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="content" className="text-right block">المحتوى</Label>
-              <Textarea
-                id="content"
-                name="content"
-                value={formData.content}
-                onChange={handleInputChange}
-                className="text-right h-64"
-                placeholder="اكتب المحتوى الكامل هنا..."
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="language" className="text-right block">اللغة</Label>
-              <Select
-                value={formData.language}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, language: value }))}
-              >
-                <SelectTrigger id="language">
-                  <SelectValue placeholder="اختر اللغة" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="arabic">العربية</SelectItem>
-                  <SelectItem value="english">الإنجليزية</SelectItem>
-                  <SelectItem value="turkish">التركية</SelectItem>
-                  <SelectItem value="french">الفرنسية</SelectItem>
-                  <SelectItem value="urdu">الأردية</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <Card>
-              <CardContent className="pt-6 space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="requiresReview">مراجعة المشرفين</Label>
-                    <p className="text-sm text-muted-foreground">
-                      سيتم مراجعة المحتوى قبل النشر
-                    </p>
+    <div dir="rtl" className="container mx-auto p-4 font-amiri">
+      <Card className="w-full max-w-4xl mx-auto">
+        <CardHeader>
+          <CardTitle className="text-3xl font-bold">استوديو صناعة المحتوى</CardTitle>
+          <CardDescription>منصة متكاملة لإنشاء وإدارة المحتوى الإسلامي</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="create">إنشاء جديد</TabsTrigger>
+              <TabsTrigger value="drafts">المسودات ({drafts.length})</TabsTrigger>
+            </TabsList>
+            <TabsContent value="create">
+              <div className="space-y-4 py-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="title">العنوان</Label>
+                    <Input id="title" name="title" value={formData.title} onChange={handleInputChange} placeholder="عنوان المحتوى" />
                   </div>
-                  <Switch
-                    id="requiresReview"
-                    checked={formData.requiresReview}
-                    onCheckedChange={(checked) => handleSwitchChange('requiresReview', checked)}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="isPublic">محتوى عام</Label>
-                    <p className="text-sm text-muted-foreground">
-                      يمكن للجميع مشاهدة ومشاركة هذا المحتوى
-                    </p>
-                  </div>
-                  <Switch
-                    id="isPublic"
-                    checked={formData.isPublic}
-                    onCheckedChange={(checked) => handleSwitchChange('isPublic', checked)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-            
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={clearForm}>
-                مسح النموذج
-              </Button>
-              <Button 
-                onClick={handleSaveDraft} 
-                className="flex items-center gap-2"
-                disabled={isLoading || !currentUser}
-              >
-                {isLoading ? (
-                  <div className="h-4 w-4 rounded-full border-2 border-current border-r-transparent animate-spin"></div>
-                ) : (
-                  <Save className="h-4 w-4" />
-                )}
-                حفظ كمسودة
-              </Button>
-              <Button
-                variant="default"
-                onClick={handleSubmitForReview}
-                className="flex items-center gap-2"
-                disabled={isLoading || !currentUser}
-              >
-                {isLoading ? (
-                  <div className="h-4 w-4 rounded-full border-2 border-current border-r-transparent animate-spin"></div>
-                ) : (
-                  <Upload className="h-4 w-4" />
-                )}
-                إرسال للمراجعة
-              </Button>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="drafts" className="space-y-4 mt-4">
-            <h3 className="text-lg font-semibold mb-4 text-right">المسودات والمحتوى المنتظر</h3>
-            
-            {isLoading ? (
-              <div className="text-center py-8">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                <p className="mt-2 text-muted-foreground">جارِ التحميل...</p>
-              </div>
-            ) : drafts.length === 0 ? (
-                <div className="text-center py-12">
-                  <FileText className="h-12 w-12 mx-auto text-muted-foreground" />
-                  <h3 className="mt-4 text-lg font-medium">لا توجد مسودات</h3>
-                  <p className="text-muted-foreground mt-2">
-                    ابدأ بإنشاء محتوى جديد
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {drafts.map((draft) => (
-                    <Card key={draft.id} className="overflow-hidden">
-                      <div className="p-6">
-                        <div className="flex justify-between items-start">
-                          <div className="flex flex-col space-y-1 items-end text-right">
-                            <div className="flex items-center space-x-2 space-x-reverse">
-                              {getStatusBadge(draft.status)}
-                              <h3 className="font-semibold text-lg">{draft.title}</h3>
+                  <div>
+                    <Label>نوع المحتوى</Label>
+                    <Select onValueChange={handleContentTypeChange} defaultValue={contentType}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر نوع المحتوى" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {contentTypes.map(type => (
+                          <SelectItem key={type.value} value={type.value}>
+                            <div className="flex items-center">
+                              {type.icon} {type.label}
                             </div>
-                            <div className="flex items-center text-muted-foreground text-sm">
-                              <Clock className="h-3 w-3 ml-1" />
-                              <span>آخر تحديث: {draft.lastUpdated}</span>
-                              <span className="mx-2">•</span>
-                              <div className="flex items-center">
-                                {getContentTypeIcon(draft.contentType)}
-                                <span className="ml-1">
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="content">المحتوى</Label>
+                  <Textarea 
+                    id="content" 
+                    name="content" 
+                    value={formData.content} 
+                    onChange={handleInputChange} 
+                    placeholder="اكتب المحتوى هنا..." 
+                    rows={15}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="excerpt">مقتطف</Label>
+                  <Textarea id="excerpt" name="excerpt" value={formData.excerpt} onChange={handleInputChange} placeholder="مقتطف قصير للمحتوى" rows={3} />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="tags">الوسوم (مفصولة بفاصلة)</Label>
+                    <Input id="tags" name="tags" value={formData.tags} onChange={handleInputChange} placeholder="مثال: فقه, حديث, سيرة" />
+                  </div>
+                  <div>
+                    <Label htmlFor="categories">الفئة</Label>
+                    <Input id="categories" name="categories" value={formData.categories} onChange={handleInputChange} placeholder="مثال: العقيدة الإسلامية" />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-4">
+                  <div className="flex items-center space-x-2 space-x-reverse">
+                    <Switch id="isPublic" checked={formData.isPublic} onCheckedChange={(c) => handleSwitchChange('isPublic', c)} />
+                    <Label htmlFor="isPublic">مرئي للعامة</Label>
+                  </div>
+                  <div className="flex items-center space-x-2 space-x-reverse">
+                    <Switch id="requiresReview" checked={formData.requiresReview} onCheckedChange={(c) => handleSwitchChange('requiresReview', c)} />
+                    <Label htmlFor="requiresReview">يتطلب مراجعة</Label>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-2 space-x-reverse pt-4">
+                <Button variant="outline" onClick={clearForm}>مسح</Button>
+                <Button onClick={handleSaveDraft} disabled={isLoading}>
+                  {isLoading ? 'جاري الحفظ...' : <><Save className="h-4 w-4 ml-2" /> حفظ كمسودة</>}
+                </Button>
+              </div>
+            </TabsContent>
+            <TabsContent value="drafts">
+              <div className="space-y-4 py-4">
+                {isLoading ? (
+                  <p>جاري تحميل المسودات...</p>
+                ) : drafts.length === 0 ? (
+                  <p>لا يوجد مسودات حالياً.</p>
+                ) : (
+                  drafts.map(draft => (
+                    <Card key={draft.id} className="flex flex-col sm:flex-row items-start gap-4 p-4">
+                      <div className="flex-grow">
+                        <CardTitle className="text-lg font-bold">{draft.title}</CardTitle>
+                        <p className="text-sm text-gray-500 mt-1">
+                          <span className="inline-flex items-center">
+                            {contentTypes.find(ct => ct.value === draft.contentType)?.icon}
+                            <span className="mr-1">{contentTypes.find(ct => ct.value === draft.contentType)?.label}</span>
+                          </span>
+                          <span className="mx-2">|</span>
+                          <span className="inline-flex items-center">
+                            <Clock className="h-4 w-4 ml-1" />
+                            آخر تحديث: {draft.lastUpdated}
+                          </span>
+                        </p>
+                        <p className="text-sm mt-2">{draft.excerpt}</p>
+                        <div className="mt-2">
+                          <span className={`px-2 py-1 text-xs font-semibold rounded-full ${draft.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                            {draft.status === 'published' ? 'منشور' : 'مسودة'}
+                          </span>
                                   {contentTypes.find(t => t.value === draft.contentType)?.label}
                                 </span>
                               </div>

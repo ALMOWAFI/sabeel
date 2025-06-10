@@ -32,70 +32,130 @@ import { Textarea } from "@/components/ui/textarea";
 import { motion } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import dataService from '@/services/DataService';
+import { Collections } from '@/types/collections';
+import { Project, Profile, Resource, Meeting } from '@/types/models';
 
 const SecretOrganization = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [memberType, setMemberType] = useState<'regular' | 'premium' | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDataLoading, setIsDataLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Check if user was authenticated as premium through the login page
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [members, setMembers] = useState<Profile[]>([]);
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+
   useEffect(() => {
-    const authSession = sessionStorage.getItem('member-authenticated');
-    
-    if (authSession === 'premium') {
-      setIsAuthenticated(true);
-      setMemberType('premium');
-    } else {
-      // Redirect non-premium users
-      setIsAuthenticated(false);
-      setMemberType(null);
-      navigate('/login');
-    }
-  }, [navigate]);
+    const checkAuth = async () => {
+      try {
+        const user = await dataService.getCurrentUser();
+        if (user && user.role === 'premium') {
+          setIsAuthenticated(true);
+        } else {
+          toast({ title: "Access Denied", description: "You must be a premium member to view this page.", variant: "destructive" });
+          navigate('/login');
+        }
+      } catch (error) {
+        toast({ title: "Authentication Error", description: "Please log in to continue.", variant: "destructive" });
+        navigate('/login');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Dummy data for the secret organization dashboard
-  const secretProjects = [
-    { id: 1, title: "مشروع الترجمة المتقدمة", progress: 75, members: 8, priority: "عالي", deadline: "15 يونيو 2025" },
-    { id: 2, title: "تطوير نظام التحليل الدلالي", progress: 45, members: 12, priority: "متوسط", deadline: "30 يوليو 2025" },
-    { id: 3, title: "بناء قاعدة بيانات المخطوطات", progress: 90, members: 5, priority: "عالي", deadline: "10 مايو 2025" },
-    { id: 4, title: "تحسين خوارزميات البحث", progress: 30, members: 7, priority: "منخفض", deadline: "25 أغسطس 2025" }
-  ];
+    checkAuth();
+  }, [navigate, toast]);
 
-  const organizationMembers = [
-    { id: 1, name: "د. أحمد الفاضل", role: "مدير المنظمة", expertise: "علوم الحديث", status: "متصل", avatar: "AF" },
-    { id: 2, name: "د. سارة المهدي", role: "رئيس قسم البحث", expertise: "التفسير", status: "غير متصل", avatar: "SM" },
-    { id: 3, name: "م. محمد العلوي", role: "مدير التقنية", expertise: "الذكاء الاصطناعي", status: "مشغول", avatar: "MA" },
-    { id: 4, name: "د. فاطمة الزهراء", role: "منسقة المشاريع", expertise: "الفقه المقارن", status: "متصل", avatar: "FZ" },
-    { id: 5, name: "أ. خالد النور", role: "مطور رئيسي", expertise: "معالجة اللغات", status: "متصل", avatar: "KN" }
-  ];
+  useEffect(() => {
+    if (!isAuthenticated) return;
 
-  const secretResources = [
-    { id: 1, title: "قاعدة بيانات المخطوطات النادرة", type: "قاعدة بيانات", access: "كامل", lastUpdated: "قبل 3 أيام" },
-    { id: 2, title: "أدوات التحليل النصي المتقدمة", type: "برمجيات", access: "كامل", lastUpdated: "قبل أسبوع" },
-    { id: 3, title: "نماذج الذكاء الاصطناعي المدربة", type: "نماذج", access: "مقيد", lastUpdated: "اليوم" },
-    { id: 4, title: "مكتبة الترجمات المتخصصة", type: "محتوى", access: "كامل", lastUpdated: "قبل شهر" }
-  ];
+    const fetchData = async () => {
+      setIsDataLoading(true);
+      try {
+        const [rawProjects, rawMembers, rawResources, rawMeetings] = await Promise.all([
+          dataService.listDocuments<any>(Collections.SCHOLAR_TECHNOLOGIST_PROJECTS),
+          dataService.listDocuments<any>(Collections.PROFILES, { role: 'premium' }),
+          dataService.listDocuments<any>(Collections.CONTENT_ITEMS, { is_secret: true }),
+          dataService.listDocuments<any>(Collections.EVENTS, { is_secret: true }),
+        ]);
 
-  const upcomingMeetings = [
-    { id: 1, title: "اجتماع تنسيق المشاريع الأسبوعي", date: "الخميس، 10:00 صباحاً", participants: 12 },
-    { id: 2, title: "مراجعة تقدم مشروع الترجمة", date: "الأحد، 2:00 ظهراً", participants: 5 },
-    { id: 3, title: "تخطيط المرحلة القادمة", date: "الثلاثاء، 11:30 صباحاً", participants: 8 }
-  ];
+        const projects = rawProjects.map((p: any): Project => ({
+          id: p.id,
+          title: p.title || 'Untitled Project',
+          progress: p.progress || 0,
+          members: p.members_count || 0,
+          priority: p.priority || 'متوسط',
+          deadline: p.deadline ? new Date(p.deadline).toLocaleDateString('ar-SA') : 'غير محدد',
+        }));
+
+        const members = rawMembers.map((m: any): Profile => ({
+          id: m.id,
+          name: m.full_name || m.name || 'عضو غير معروف',
+          role: m.role || 'عضو',
+          expertise: m.expertise || 'غير محدد',
+          status: m.status || 'غير متصل',
+          avatar: m.avatar_url || '',
+        }));
+
+        const resources = rawResources.map((r: any): Resource => ({
+          id: r.id,
+          title: r.title || 'Untitled Resource',
+          type: r.type || 'غير محدد',
+          access: r.access_level || 'مقيد',
+          lastUpdated: r.updated_at ? new Date(r.updated_at).toLocaleDateString('ar-SA') : 'غير محدد',
+        }));
+
+        const meetings = rawMeetings.map((m: any): Meeting => ({
+          id: m.id,
+          title: m.title || 'Untitled Meeting',
+          date: m.event_date ? new Date(m.event_date).toLocaleString('ar-SA') : 'غير محدد',
+          participants: m.participants_count || 0,
+        }));
+
+        setProjects(projects);
+        setMembers(members);
+        setResources(resources);
+        setMeetings(meetings);
+
+      } catch (error) {
+        console.error("Failed to load organization data:", error);
+        toast({ title: "Data Error", description: "Failed to load organization data.", variant: "destructive" });
+      } finally {
+        setIsDataLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [isAuthenticated, toast]);
 
   // Handle logout
-  const handleLogout = () => {
-    sessionStorage.removeItem('member-authenticated');
-    toast({
-      title: "تم تسجيل الخروج بنجاح",
-      description: "إلى اللقاء!",
-      variant: "default",
-    });
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await dataService.logout();
+      toast({
+        title: "تم تسجيل الخروج بنجاح",
+        description: "إلى اللقاء!",
+        variant: "default",
+      });
+      navigate('/login');
+    } catch (error) {
+      toast({ title: "Logout Failed", description: "An error occurred during logout.", variant: "destructive" });
+    }
   };
 
-  if (!isAuthenticated || memberType !== 'premium') {
-    return null; // Redirect will happen based on useEffect
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null; // Redirect is handled in useEffect
   }
 
   return (
@@ -182,7 +242,7 @@ const SecretOrganization = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {secretProjects.map(project => (
+                    {isDataLoading ? <p>Loading projects...</p> : projects.map(project => (
                       <div key={project.id} className="border border-indigo-100 dark:border-indigo-900 rounded-lg p-4 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors">
                         <div className="flex justify-between items-start mb-2">
                           <div className="px-2 py-1 text-xs rounded-full bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300">
@@ -251,7 +311,7 @@ const SecretOrganization = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {secretResources.map(resource => (
+                        {isDataLoading ? <p>Loading resources...</p> : resources.map(resource => (
                           <tr key={resource.id} className="border-b border-indigo-100 dark:border-indigo-900 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors">
                             <td className="py-3 px-2 text-right text-sm">{resource.lastUpdated}</td>
                             <td className="py-3 px-2 text-right">
@@ -289,7 +349,7 @@ const SecretOrganization = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {organizationMembers.map(member => (
+                    {isDataLoading ? <p>Loading members...</p> : members.map(member => (
                       <div key={member.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors">
                         <div className="flex items-center gap-2">
                           <div className={`w-2 h-2 rounded-full ${member.status === "متصل" ? 'bg-green-500' : member.status === "مشغول" ? 'bg-amber-500' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
@@ -322,7 +382,7 @@ const SecretOrganization = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {upcomingMeetings.map(meeting => (
+                    {isDataLoading ? <p>Loading meetings...</p> : meetings.map(meeting => (
                       <div key={meeting.id} className="border border-indigo-100 dark:border-indigo-900 rounded-lg p-3 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors">
                         <h3 className="font-medium text-right mb-1">{meeting.title}</h3>
                         <div className="flex justify-between text-sm text-muted-foreground">
