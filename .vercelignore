@@ -1,0 +1,28 @@
+# Large nested repositories
+hack2/
+webfrontend/
+sabeel-tech-awakening/
+sabeel_doc/
+mcp's/
+.vscode/
+
+# Documentation
+*.md
+!README.md
+
+# Node modules (will be reinstalled)
+node_modules/
+
+# Build output
+dist/
+
+# Environment files  
+.env
+key.env
+
+# Git
+.git/
+
+# Windows files
+*.docx
+Thumbs.db 
