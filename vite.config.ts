@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -18,7 +19,8 @@ export default defineConfig({
         '**/hack2/**',
         '**/sabeel_doc/**',
         '**/sabeel-clean/**',
-        '**/mcp*/**'
+        '**/mcp*/**',
+        '**/node_modules/**'
       ]
     }
   },
@@ -26,19 +28,43 @@ export default defineConfig({
     port: 4173,
     host: true
   },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src')
+    }
+  },
   optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      '@supabase/supabase-js'
+    ],
     exclude: [
+      // TensorFlow.js dependencies
       '@tensorflow/tfjs-backend-wasm',
       '@tensorflow/tfjs-automl', 
       '@tensorflow/tfjs-tflite',
+      'babel-polyfill',
+      'regenerator-runtime/runtime',
+      // PeerTube dependencies
       '@peertube/peertube-models',
       '@peertube/player',
       '@peertube/peertube-core-utils',
       '@root-helpers/translations-manager',
       'jschannel',
       'color-bits',
-      'babel-polyfill',
-      'regenerator-runtime/runtime'
+      // RxJS and Socket.io dependencies
+      'rxjs',
+      'rxjs/operators',
+      'socket.io-client'
+    ],
+    entries: [
+      'src/main.tsx'
     ]
+  },
+  esbuild: {
+    logOverride: { 
+      'this-is-undefined-in-esm': 'silent' 
+    }
   }
 }) 

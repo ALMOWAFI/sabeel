@@ -26,8 +26,8 @@ interface CacheEntry {
 }
 
 export class ApiService {
-  private baseUrl: string;
-  private headers: Record<string, string>;
+  protected baseUrl: string;
+  protected headers: Record<string, string>;
   private timeout: number;
   private retries: number;
   private cache = new Map<string, CacheEntry>();

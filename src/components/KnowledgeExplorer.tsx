@@ -248,7 +248,7 @@ export function KnowledgeExplorer() {
           </div>
           <Select 
             value={nodeType} 
-            onValueChange={(value) => setNodeType(value as NodeType | 'all')}
+            onValueChange={(value: string) => setNodeType(value as NodeType | 'all')}
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Node Type" />
@@ -279,7 +279,7 @@ export function KnowledgeExplorer() {
               <Label>Relationship Type</Label>
               <Select
                 value={relationshipType}
-                onValueChange={(value) => setRelationshipType(value as RelationshipType)}
+                onValueChange={(value: string) => setRelationshipType(value as RelationshipType)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select relationship type" />
