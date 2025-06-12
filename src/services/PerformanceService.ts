@@ -550,12 +550,12 @@ export class PerformanceService {
     };
   }
 
-  /**
-   * Cleanup all caches
-   */
-  cleanup(): void {
-    this.caches.forEach((cache, name) => {
-      this.cleanup(name, this.defaultCacheConfig);
+      /**
+     * Cleanup all caches
+     */
+    cleanupAll(): void {
+      this.caches.forEach((cache, name) => {
+        this.cleanup(name, this.defaultCacheConfig);
     });
 
     // Clear batch queue
