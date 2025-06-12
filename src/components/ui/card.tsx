@@ -20,6 +20,11 @@ interface CardContentProps {
   className?: string;
 }
 
+interface CardDescriptionProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
 export const Card: React.FC<CardProps> = ({ children, className = '' }) => {
   return (
     <div className={`bg-white rounded-lg border border-gray-200 shadow-sm ${className}`}>
@@ -50,4 +55,12 @@ export const CardContent: React.FC<CardContentProps> = ({ children, className = 
       {children}
     </div>
   );
-}; 
+};
+
+export const CardDescription: React.FC<CardDescriptionProps> = ({ children, className = '' }) => {
+  return (
+    <p className={`text-sm text-gray-500 ${className}`}>
+      {children}
+    </p>
+  );
+};
