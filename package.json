@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
-    "build": "node debug-vercel.js && vite build",
-    "build-safe": "vite build",
+    "build": "vite build --mode production",
     "preview": "vite preview",
     "test": "jest",
     "test:watch": "jest --watch",
