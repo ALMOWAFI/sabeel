@@ -1,0 +1,38 @@
+# Large nested repositories (exclude for performance)
+hack2/
+webfrontend/
+sabeel-tech-awakening/
+sabeel_doc/
+mcp's/
+.vscode/
+
+# Source files (not needed after build)
+src/
+public/
+
+# Development files
+node_modules/
+.env
+key.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Git and development
+.git/
+.gitignore
+
+# Documentation (not needed for deployment)
+*.md
+!README.md
+
+# Windows files
+*.docx
+Thumbs.db
+
+# Development tools
+.trunk/
+
+# Keep build output for deployment
+# dist/ - REMOVED this exclusion 

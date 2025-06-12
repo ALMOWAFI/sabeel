@@ -1,0 +1,66 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production
+/build
+/dist
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Git
+.git/
+
+# Large nested repositories
+hack2/
+webfrontend/
+sabeel-tech-awakening/
+sabeel_doc/
+sabeel-clean/
+
+# Vercel
+.vercel
+
+# Documentation
+*.md
+!README.md
+!KNOWLEDGE_GRAPH_BEST_PRACTICES.md
+!setup-supabase.md
+!NEXT_STEPS.md
+!IMPLEMENTATION_PLAN.md
+!ENHANCED_INTEGRATION.md
+!FRAMEWORK_INTEGRATION.md
+!GITHUB_UPLOAD_INSTRUCTIONS.md
