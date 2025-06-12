@@ -6,9 +6,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
-import { KnowledgeGraphService } from '../services/KnowledgeGraphService';
 import { Database } from '../types/database';
 
 // Constants for node and relationship types
@@ -16,6 +14,34 @@ const NODE_TYPES = ['concept', 'person', 'event', 'location', 'book', 'hadith', 
 const RELATIONSHIP_TYPES = ['references', 'authored', 'occurred_at', 'related_to', 'part_of', 'cites'] as const;
 
 type RelationshipType = typeof RELATIONSHIP_TYPES[number];
+
+// Custom Badge component with TypeScript types
+const Badge = ({
+  variant = 'default',
+  className = '',
+  children,
+  ...props
+}: {
+  variant?: 'default' | 'secondary' | 'outline';
+  className?: string;
+  children: React.ReactNode;
+} & React.HTMLAttributes<HTMLDivElement>) => {
+  const baseStyles = 'inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold';
+  const variantStyles = {
+    default: 'bg-blue-100 text-blue-800 border-transparent',
+    secondary: 'bg-gray-100 text-gray-800 border-transparent',
+    outline: 'bg-transparent border-gray-300 text-gray-700'
+  };
+
+  return (
+    <div
+      className={`${baseStyles} ${variantStyles[variant] || variantStyles.default} ${className}`}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
 
 const supabase = createClient<Database>(
   import.meta.env.VITE_SUPABASE_URL,
@@ -34,23 +60,18 @@ export function KnowledgeExplorer() {
   const [connectedNodes, setConnectedNodes] = useState<KnowledgeNode[]>([]);
   const [suggestedNodes, setSuggestedNodes] = useState<KnowledgeNode[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [nodeType, setNodeType] = useState<NodeType>('concept');
+  const [nodeType, setNodeType] = useState<NodeType | 'all'>('all');
   const [relationshipType, setRelationshipType] = useState<RelationshipType>('related_to');
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch nodes and edges in parallel
       const [nodesResponse, edgesResponse] = await Promise.all([
         supabase.from('knowledge_nodes').select('*'),
         supabase.from('knowledge_edges').select('*')
@@ -61,7 +82,6 @@ export function KnowledgeExplorer() {
 
       setNodes(nodesResponse.data || []);
       setEdges(edgesResponse.data || []);
-
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -74,15 +94,13 @@ export function KnowledgeExplorer() {
       setLoading(true);
       setError(null);
 
-      let query = supabase
-        .from('knowledge_nodes')
-        .select('*');
+      let query = supabase.from('knowledge_nodes').select('*');
 
       if (searchQuery) {
         query = query.ilike('title', `%${searchQuery}%`);
       }
       
-      if (nodeType && nodeType !== 'all') {
+      if (nodeType !== 'all') {
         query = query.eq('type', nodeType);
       }
 
@@ -148,12 +166,11 @@ export function KnowledgeExplorer() {
     try {
       setSyncing(true);
       setError(null);
-      
-      await KnowledgeGraphService.syncWithMCP();
+      // TODO: Implement MCP sync logic
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
       await fetchData();
-      
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Syncing failed');
+      setError(err instanceof Error ? err.message : 'Sync failed');
     } finally {
       setSyncing(false);
     }
@@ -161,14 +178,11 @@ export function KnowledgeExplorer() {
 
   const handleNodeSelect = (node: KnowledgeNode) => {
     setSelectedNode(node);
-    setConnectedNodes(getConnectedNodes(node.id));
-    fetchSuggestedNodes(node.id);
   };
 
   const fetchSuggestedNodes = async (nodeId: string) => {
     try {
-      // This is a placeholder - replace with actual MCP integration
-      // For now, we'll just get some random nodes that aren't already connected
+      // Get some random nodes that aren't already connected
       const { data: allNodes } = await supabase
         .from('knowledge_nodes')
         .select('*')
@@ -185,26 +199,34 @@ export function KnowledgeExplorer() {
     }
   };
 
+  // Fetch data on component mount
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Update connected nodes when selected node changes
   useEffect(() => {
     if (selectedNode) {
       const connected = getConnectedNodes(selectedNode.id);
       setConnectedNodes(connected);
-      
-      // Fetch suggested nodes when a node is selected
       fetchSuggestedNodes(selectedNode.id);
     } else {
       setConnectedNodes([]);
       setSuggestedNodes([]);
     }
-  }, [selectedNode, edges]);
+  }, [selectedNode, nodes, edges]);
 
-  if (loading && !syncing) return (
-    <div className="flex justify-center items-center min-h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-    </div>
-  );
-  
-  if (error) return <div className="text-red-500 p-4">Error: {error}</div>;
+  if (loading && !syncing) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="text-red-500 p-4">Error: {error}</div>;
+  }
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -224,7 +246,10 @@ export function KnowledgeExplorer() {
               className="w-full"
             />
           </div>
-          <Select value={nodeType} onValueChange={(value) => setNodeType(value as NodeType)}>
+          <Select 
+            value={nodeType} 
+            onValueChange={(value) => setNodeType(value as NodeType | 'all')}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Node Type" />
             </SelectTrigger>
@@ -238,13 +263,13 @@ export function KnowledgeExplorer() {
             </SelectContent>
           </Select>
           <Button onClick={handleSearch} disabled={loading}>
-            {loading ? <span className="mr-2">Loading...</span> : 'Search'}
+            Search
           </Button>
           <Button 
             variant="outline" 
             onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
           >
-            {showAdvancedSearch ? 'Hide Advanced' : 'Advanced'}
+            {showAdvancedSearch ? 'Hide' : 'Advanced'}
           </Button>
         </div>
 
@@ -268,36 +293,16 @@ export function KnowledgeExplorer() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label>Node Type</Label>
-                <Select 
-                  value={relationshipType} 
-                  onValueChange={setRelationshipType}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select relationship" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {RELATIONSHIP_TYPES.map(type => (
-                      <SelectItem key={type} value={type}>
-                        {type.replace('_', ' ')}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="md:col-span-2 flex items-end">
-                <Button 
-                  variant="outline" 
-                  onClick={syncWithMCP}
-                  disabled={syncing}
-                  className="flex items-center gap-2"
-                >
-                  {syncing ? 'Syncing...' : 'Sync with MCP'}
-                  {syncing && <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>}
-                </Button>
-              </div>
+            <div className="flex items-end">
+              <Button 
+                variant="outline" 
+                onClick={syncWithMCP}
+                disabled={syncing || loading}
+                className="flex items-center gap-2"
+              >
+                {syncing ? 'Syncing...' : 'Sync with MCP'}
+                {syncing && <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>}
+              </Button>
             </div>
           </div>
         )}
@@ -305,24 +310,22 @@ export function KnowledgeExplorer() {
 
       {/* Suggested nodes */}
       {suggestedNodes.length > 0 && (
-        <div className="bg-blue-50 p-4 rounded-md">
-          <h3 className="font-medium text-blue-800 mb-2">Suggested from Knowledge Graph:</h3>
+        <div className="mb-6 bg-blue-50 p-4 rounded-md">
+          <h3 className="font-medium text-blue-800 mb-2">Suggested Connections</h3>
           <div className="flex flex-wrap gap-2">
-            {suggestedNodes.map(node => (
-              <Badge 
-                key={node.id} 
-                variant="outline" 
-                className="cursor-pointer hover:bg-blue-100"
+            {suggestedNodes.map((node) => (
+              <div 
+                key={node.id}
+                className="inline-flex items-center rounded-md border border-blue-200 px-2.5 py-0.5 text-xs font-medium text-blue-800 bg-blue-100 cursor-pointer hover:bg-blue-200"
                 onClick={() => handleNodeSelect(node)}
               >
                 {node.title}
-              </Badge>
+              </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Main Content */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Node List */}
         <div className="md:col-span-1">
@@ -353,7 +356,7 @@ export function KnowledgeExplorer() {
                         </span>
                       </div>
                     </div>
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="secondary" className="text-xs">
                       {getConnectedNodes(node.id).length} connections
                     </Badge>
                   </div>
@@ -379,143 +382,76 @@ export function KnowledgeExplorer() {
                         <span className="text-sm text-gray-500">
                           Created: {formatDate(selectedNode.created_at)}
                         </span>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle>{selectedNode.title}</CardTitle>
-                        <div className="flex items-center mt-1">
-                          <Badge variant="outline" className="mr-2">
-                            {selectedNode.type}
-                          </Badge>
-                          <span className="text-sm text-gray-500">
-                            Created: {formatDate(selectedNode.created_at)}
-                          </span>
-                        </div>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => console.log('Edit node')}
-                      >
-                        Edit
-                      </Button>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    {selectedNode.content && (
-                      <div className="prose max-w-none mb-6">
-                        <h3 className="text-lg font-medium mb-2">Content</h3>
-                        <p className="whitespace-pre-line">{selectedNode.content}</p>
-                      </div>
-                    )}
-                    {selectedNode.metadata && Object.keys(selectedNode.metadata).length > 0 && (
-                      <div className="mt-4">
-                        <h3 className="text-lg font-medium mb-2">Metadata</h3>
-                        <div className="bg-gray-50 p-4 rounded-md">
-                          <pre className="text-sm overflow-x-auto">
-                            {JSON.stringify(selectedNode.metadata, null, 2)}
-                          </pre>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Connections</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="mb-6">
-                      <h3 className="text-lg font-medium mb-3">Connected Nodes ({connectedNodes.length})</h3>
-                      {connectedNodes.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {connectedNodes.map((node) => (
-                            <div
-                              key={node.id}
-                              className="border p-3 rounded-md hover:bg-gray-50 cursor-pointer"
-                              onClick={() => handleNodeSelect(node)}
-                            >
-                              <h4 className="font-medium">{node.title}</h4>
-                              <div className="flex items-center mt-1">
-                                <Badge variant="outline" className="text-xs mr-2">
-                                  {node.type}
-                                </Badge>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-gray-500">No connected nodes found.</p>
-                      )}
-                    </div>
-
-                    {suggestedNodes.length > 0 && (
-                      <div>
-                        <h3 className="text-lg font-medium mb-3">Suggested Connections</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {suggestedNodes.map((node) => (
-                            <div
-                              key={node.id}
-                              className="border p-3 rounded-md bg-blue-50 border-blue-100"
-                            >
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <h4 className="font-medium">{node.title}</h4>
-                                  <div className="flex items-center mt-1">
-                                    <Badge variant="outline" className="text-xs mr-2">
-                                      {node.type}
-                                    </Badge>
-                                  </div>
-                                </div>
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleCreateRelationship(selectedNode.id, node.id, relationshipType)}
-                                >
-                                  Connect
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                          </div>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => addRelationship(node)}
-                          >
-                            Connect
-                          </Button>
-                        </div>
-                        {node.content && (
-                          <p className="mt-2 text-sm text-gray-600 line-clamp-2">
-                            {node.content}
-                          </p>
-                        )}
-                      </Card>
-                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        // Implement edit functionality
+                        console.log('Edit node:', selectedNode.id);
+                      }}
+                    >
+                      Edit
+                    </Button>
                   </div>
-                  
-                  {getConnectedNodes(selectedNode.id).length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      <p>No direct connections found</p>
-                      <p className="text-sm mt-1">
-                        Use the search to find and connect related knowledge
-                      </p>
+                </CardHeader>
+                <CardContent>
+                  {selectedNode.content && (
+                    <div className="prose max-w-none mb-6">
+                      <h3 className="text-lg font-medium mb-2">Content</h3>
+                      <p className="whitespace-pre-line">{selectedNode.content}</p>
                     </div>
                   )}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="bg-gray-50 p-6 rounded-lg inline-block">
-                    <h3 className="font-medium text-gray-700">Knowledge Graph Explorer</h3>
-                    <p className="text-sm text-gray-500 mt-2 max-w-md">
-                      Select a node from the left to explore its connections in the knowledge graph.
-                    </p>
+                  {selectedNode.metadata && Object.keys(selectedNode.metadata).length > 0 && (
+                    <div className="mt-4">
+                      <h3 className="text-lg font-medium mb-2">Metadata</h3>
+                      <div className="bg-gray-50 p-4 rounded-md">
+                        <pre className="text-sm overflow-x-auto">
+                          {JSON.stringify(selectedNode.metadata, null, 2)}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Connections</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="mb-6">
+                    <h3 className="text-lg font-medium mb-3">Connected Nodes ({connectedNodes.length})</h3>
+                    {connectedNodes.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {connectedNodes.map((node) => (
+                          <div
+                            key={node.id}
+                            className="border p-3 rounded-md hover:bg-gray-50 cursor-pointer"
+                            onClick={() => handleNodeSelect(node)}
+                          >
+                            <h4 className="font-medium">{node.title}</h4>
+                            <div className="flex items-center mt-1">
+                              <Badge variant="outline" className="text-xs mr-2">
+                                {node.type}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">No connected nodes found.</p>
+                    )}
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-64 border-2 border-dashed rounded-lg text-gray-400">
+              <p>Select a node to view details</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
