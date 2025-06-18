@@ -2,12 +2,263 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  /* Arabic and Islamic content styling */
+  .arabic {
+    font-family: 'Amiri', serif;
+    direction: rtl;
+    text-align: right;
+  }
+  
+  .quran {
+    font-family: 'Scheherazade New', serif;
+    direction: rtl;
+    text-align: right;
+    line-height: 2;
+    font-size: 1.25rem;
+  }
+  
+  .hadith {
+    font-family: 'Amiri', serif;
+    direction: rtl;
+    text-align: right;
+    line-height: 1.8;
+  }
+  
+  /* Responsive Arabic text */
+  @media (max-width: 640px) {
+    .quran {
+      font-size: 1.1rem;
+      line-height: 1.8;
+    }
+  }
+}
+
+@layer components {
+  /* Custom component styles */
+  .btn-islamic {
+    @apply bg-islamic-500 hover:bg-islamic-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+  
+  .card-islamic {
+    @apply bg-gradient-to-br from-islamic-50 to-emerald-50 border border-islamic-200 rounded-lg shadow-sm;
+  }
+  
+  .text-islamic-gradient {
+    @apply bg-gradient-to-r from-islamic-600 to-emerald-600 bg-clip-text text-transparent;
+  }
+  
+  /* Loading animation */
+  .loading-dots {
+    @apply inline-flex space-x-1;
+  }
+  
+  .loading-dots > div {
+    @apply w-2 h-2 bg-current rounded-full animate-pulse;
+    animation-delay: calc(var(--i) * 0.1s);
+  }
+  
+  /* Collaboration indicators */
+  .collaborator-cursor {
+    @apply absolute w-0.5 h-5 bg-blue-500 animate-pulse;
+  }
+  
+  .collaborator-selection {
+    @apply bg-blue-200 bg-opacity-30;
+  }
+  
+  /* Knowledge graph nodes */
+  .knowledge-node {
+    @apply rounded-full border-2 border-islamic-300 bg-islamic-100 hover:bg-islamic-200 transition-colors duration-200 cursor-pointer;
+  }
+  
+  .knowledge-node.active {
+    @apply border-islamic-500 bg-islamic-200;
+  }
+  
+  /* Canvas integration styles */
+  .canvas-course-card {
+    @apply bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200;
+  }
+  
+  .canvas-assignment-item {
+    @apply flex items-center justify-between p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors duration-200;
+  }
+  
+  /* Performance optimization classes */
+  .lazy-image {
+    @apply opacity-0 transition-opacity duration-300;
+  }
+  
+  .lazy-image.loaded {
+    @apply opacity-100;
+  }
+  
+  /* Authentication forms */
+  .auth-form {
+    @apply space-y-4 p-6 bg-white rounded-lg shadow-lg border border-gray-200;
+  }
+  
+  .auth-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-islamic-500 focus:border-islamic-500 transition-colors duration-200;
+  }
+  
+  .auth-button {
+    @apply w-full bg-islamic-500 hover:bg-islamic-600 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  /* Notification styles */
+  .notification-success {
+    @apply bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-lg;
+  }
+  
+  .notification-error {
+    @apply bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg;
+  }
+  
+  .notification-warning {
+    @apply bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-lg;
+  }
+  
+  .notification-info {
+    @apply bg-blue-50 border border-blue-200 text-blue-800 p-4 rounded-lg;
+  }
+}
+
+@layer utilities {
+  /* Custom utility classes */
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground)) hsl(var(--muted));
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 4px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground));
+    border-radius: 4px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--foreground));
+  }
+  
+  /* Performance utilities */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+  
+  .optimize-rendering {
+    contain: layout style paint;
+  }
+  
+  /* Accessibility utilities */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  
+  .focus-visible {
+    @apply outline-none ring-2 ring-islamic-500 ring-offset-2;
+  }
+}
+
+/* Animation keyframes */
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-islamic {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+/* Responsive design helpers */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .arabic,
+  .quran,
+  .hadith {
+    font-size: 12pt;
+    line-height: 1.6;
+  }
 } 

@@ -1,10 +1,107 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🕌 Sabeel - Islamic Knowledge Platform</title>
+    <meta name="description" content="Comprehensive Islamic Knowledge Platform with Canvas LMS integration, real-time collaboration, and performance optimizations" />
+    <meta name="keywords" content="Islamic education, Canvas LMS, collaboration, knowledge management, Quran, Hadith" />
+    <meta name="author" content="Sabeel Platform Team" />
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Sabeel Platform - Islamic Knowledge Hub" />
+    <meta property="og:description" content="Comprehensive Islamic Knowledge Platform with Canvas LMS integration" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://sabeel-platform.com" />
+    <meta property="og:image" content="/sabeel-og-image.png" />
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Sabeel Platform - Islamic Knowledge Hub" />
+    <meta name="twitter:description" content="Comprehensive Islamic Knowledge Platform with Canvas LMS integration" />
+    <meta name="twitter:image" content="/sabeel-twitter-image.png" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/sabeel-logo.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    
+    <!-- Google Fonts for Arabic/Islamic Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Theme CSS Variables -->
+    <style>
+      :root {
+        --background: 0 0% 100%;
+        --foreground: 222.2 84% 4.9%;
+        --card: 0 0% 100%;
+        --card-foreground: 222.2 84% 4.9%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 222.2 84% 4.9%;
+        --primary: 142 76% 36%;
+        --primary-foreground: 355.7 100% 97.3%;
+        --secondary: 210 40% 96%;
+        --secondary-foreground: 222.2 84% 4.9%;
+        --muted: 210 40% 96%;
+        --muted-foreground: 215.4 16.3% 46.9%;
+        --accent: 210 40% 96%;
+        --accent-foreground: 222.2 84% 4.9%;
+        --destructive: 0 84.2% 60.2%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 214.3 31.8% 91.4%;
+        --input: 214.3 31.8% 91.4%;
+        --ring: 142 76% 36%;
+        --radius: 0.75rem;
+      }
+      
+      .dark {
+        --background: 222.2 84% 4.9%;
+        --foreground: 210 40% 98%;
+        --card: 222.2 84% 4.9%;
+        --card-foreground: 210 40% 98%;
+        --popover: 222.2 84% 4.9%;
+        --popover-foreground: 210 40% 98%;
+        --primary: 142 76% 36%;
+        --primary-foreground: 355.7 100% 97.3%;
+        --secondary: 217.2 32.6% 17.5%;
+        --secondary-foreground: 210 40% 98%;
+        --muted: 217.2 32.6% 17.5%;
+        --muted-foreground: 215 20.2% 65.1%;
+        --accent: 217.2 32.6% 17.5%;
+        --accent-foreground: 210 40% 98%;
+        --destructive: 0 62.8% 30.6%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 217.2 32.6% 17.5%;
+        --input: 217.2 32.6% 17.5%;
+        --ring: 142 76% 36%;
+      }
+      
+      * {
+        border-color: hsl(var(--border));
+      }
+      
+      body {
+        background-color: hsl(var(--background));
+        color: hsl(var(--foreground));
+      }
+      
+      /* Arabic text styling */
+      .arabic {
+        font-family: 'Amiri', serif;
+        direction: rtl;
+        text-align: right;
+      }
+      
+      .quran {
+        font-family: 'Scheherazade New', serif;
+        direction: rtl;
+        text-align: right;
+        line-height: 2;
+      }
+    </style>
+    
+    <title>Sabeel Platform - Islamic Knowledge Hub</title>
   </head>
   <body>
     <div id="root"></div>
